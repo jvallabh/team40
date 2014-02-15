@@ -12,6 +12,8 @@ package edu.buffalo.cse562;
  * Anil Nalamalapu------------anilkuma@buffalo.edu
  */
 public interface Operator {
- public void resetStream();
- public Tuple readOneTuple();
+	
+	public Datum[] readOneTuple();
+	
+	public void reset();
 }

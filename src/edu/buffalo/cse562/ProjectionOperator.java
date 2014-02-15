@@ -14,15 +14,15 @@ package edu.buffalo.cse562;
 public class ProjectionOperator implements Operator {
 
 	@Override
-	public void resetStream() {
+	public Datum[] readOneTuple() {
 		// TODO Auto-generated method stub
-		
+		return null;
 	}
 
 	@Override
-	public Tuple readOneTuple() {
+	public void reset() {
 		// TODO Auto-generated method stub
-		return null;
+		
 	}
 
 }

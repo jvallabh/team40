@@ -4,6 +4,7 @@
 package edu.buffalo.cse562;
 
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
 
 /**
  * @author The Usual Suspects
@@ -15,29 +16,33 @@ import net.sf.jsqlparser.expression.Expression;
  */
 public class SelectionOperator implements Operator {
 	Operator input;
+	Column[] schema;
 	Expression condition;
 	
-	public SelectionOperator(Operator input, Expression condition){
+	public SelectionOperator(Operator input, Column[] schema, Expression condition){
 		this.input = input;
 		this.condition = condition;
+		this.schema = schema;
 	}
 
 	@Override
-	public void resetStream() {
-		input.resetStream();
-		
+	public Datum[] readOneTuple() {
+		Datum[] tuple = null;
+		do {
+			tuple = input.readOneTuple();
+			if (tuple == null) return null;
+			String s;
+			Evaluator eval = new Evaluator(schema, tuple);
+			condition.accept(eval);
+			if (!(eval.getBool())) {
+				tuple = null;
+			}
+		} while (tuple == null);
+		return tuple;
 	}
 
 	@Override
-	public Tuple readOneTuple() {
-		Tuple t = null;
-		do{
-			t = input.readOneTuple();
-			/*if(!evaluate(t, condition)){
-				t = null;
-			}*/
-		}
-		while(t==null);
-		return t;
+	public void reset() {
+		input.reset();	
 	}
 }
