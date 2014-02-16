@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -85,9 +86,20 @@ public class Main {
 							
 							TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
 							List tableList = tablesNamesFinder.getTableList((Select)stmt);
+							String tableName = null;
 							for (Iterator iter = tableList.iterator(); iter.hasNext();) {
-								System.out.println("Next table name is: "+iter.next());
+								tableName = String.valueOf(iter.next());
+								System.out.println("Next table name is: "+tableName);
 							}
+							CreateTable currTableObject = tables.get(tableName);
+							ColumnDefinition[] schema = new ColumnDefinition[currTableObject.getColumnDefinitions().size()]; 
+							currTableObject.getColumnDefinitions().toArray(schema);
+							SelectionOperator selectOperator = new SelectionOperator(oper, schema, selectCondition);
+							Datum[] currTuple = null;
+							while((currTuple = selectOperator.readOneTuple()) != null){
+								System.out.println(Arrays.toString(currTuple));
+							}
+							
 						}
 					}
 				}

@@ -26,7 +26,7 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 public class FromScanner implements FromItemVisitor {
 	File basePath;
 	HashMap<String, CreateTable> tables;
-	public Column[] schema = null;
+	public ColumnDefinition[] schema = null;
 	public Operator source = null;
 	
 	public FromScanner(File basePath, HashMap<String, CreateTable> tables){
@@ -38,12 +38,9 @@ public class FromScanner implements FromItemVisitor {
 	public void visit(Table tableName) {
 		System.out.println("Visit method with tableName is called");
 		CreateTable table = tables.get(tableName.getName());
-		List cols = table.getColumnDefinitions();
-		schema = new Column[cols.size()];
-		for(int i=0;i<cols.size();i++){
-			ColumnDefinition col = (ColumnDefinition)cols.get(i);
-			schema[i]=new Column(tableName, col.getColumnName());
-		}
+		List colDefs = table.getColumnDefinitions();
+		schema = new ColumnDefinition[colDefs.size()];
+		colDefs.toArray(schema);
 		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"));
 		
 	}

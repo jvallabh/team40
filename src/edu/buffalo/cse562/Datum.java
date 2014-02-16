@@ -22,6 +22,9 @@ public class Datum {
 	public float Float() {
 		return Float.parseFloat(element);
 	}
+	public String toString(){
+		return element;
+	}
 	
 
 }

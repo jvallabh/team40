@@ -5,6 +5,7 @@ package edu.buffalo.cse562;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
  * @author The Usual Suspects
@@ -16,10 +17,10 @@ import net.sf.jsqlparser.schema.Column;
  */
 public class SelectionOperator implements Operator {
 	Operator input;
-	Column[] schema;
+	ColumnDefinition[] schema;
 	Expression condition;
 	
-	public SelectionOperator(Operator input, Column[] schema, Expression condition){
+	public SelectionOperator(Operator input, ColumnDefinition[] schema, Expression condition){
 		this.input = input;
 		this.condition = condition;
 		this.schema = schema;

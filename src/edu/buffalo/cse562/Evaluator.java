@@ -39,15 +39,16 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 public class Evaluator implements ExpressionVisitor {
 
-	Column[] schema;
+	ColumnDefinition[] schema;
 	Datum[] tuple;
 	boolean result;
 	
-	public Evaluator(Column[] schema, Datum[] tuple) {
+	public Evaluator(ColumnDefinition[] schema, Datum[] tuple) {
 		this.schema = schema;
 		this.tuple = tuple;
 	}
@@ -203,20 +204,28 @@ public class Evaluator implements ExpressionVisitor {
 	@Override
 	public void visit(MinorThan arg0) {
 		// TODO Auto-generated method stub
+		//System.out.println(arg0.getLeftExpression());
+		//Column col1 = (Column)arg0.getLeftExpression();
 		Column col1 = (Column)arg0.getLeftExpression();
-		Column col2 = (Column)arg0.getRightExpression();
-		int firstCol, secondCol;
+		int firstCol = -1, secondCol = -1;
 		for (int i=0; i<schema.length; i++) {
 			if (schema[i].getColumnName().equals(col1.getColumnName())) {
 				firstCol = i;
-			}	else if (schema[i].getColumnName().equals(col2.getColumnName())) {
+			}	/*else if (schema[i].getColumnName().equals(col2.getColumnName())) {
 				secondCol = i;
-			}
+			}*/
+		}
+		//System.out.println(arg0.getRightExpression());
+		Long col2 = Long.valueOf(arg0.getRightExpression().toString());		
+		//System.out.println(tuple[firstCol].Long());
+		if(tuple[firstCol].Long()<col2){
+			result = true;
+			return;
 		}
 		/*if (tuple[firstCol] < tuple[secondCol]) {
 			
 		}*/
-		result = true;
+		result = false;
 	}
 
 	@Override
