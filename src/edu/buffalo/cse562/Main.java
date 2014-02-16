@@ -5,10 +5,16 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
+import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.Statement;
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
@@ -51,7 +57,15 @@ public class Main {
 				while((stmt = parser.Statement()) != null){
 					if(stmt instanceof CreateTable){
 						CreateTable currTable = (CreateTable)stmt;
-						System.out.println(currTable.getColumnDefinitions());
+						//currTable.getColumnDefinitions()
+						System.out.println("Column definitions are: "+currTable.getColumnDefinitions());
+						ListIterator<ColumnDefinition> listIterator = currTable.getColumnDefinitions().listIterator();
+						while(listIterator.hasNext()){
+							ColumnDefinition tempCol = listIterator.next();
+							System.out.println(tempCol);
+							System.out.println(tempCol.getColumnName());
+							System.out.println(tempCol.getColDataType());
+						}
 						String tableName = currTable.getTable().getName();
 						tables.put(tableName, currTable);
 					}
@@ -61,10 +75,19 @@ public class Main {
 							PlainSelect pselect = (PlainSelect)select;
 							System.out.println("Printing complete pselect query: "+pselect);
 							System.out.println("Printing get from item: "+pselect.getFromItem());
+							System.out.println("Printing get from item2: "+pselect.getJoins());
 							System.out.println("Where clause is: "+pselect.getWhere());
-							/*FromScanner fromscan = new FromScanner(dataDir, tables);
+							Expression selectCondition = pselect.getWhere();
+							System.out.println("get into is: "+pselect.getInto());
+							FromScanner fromscan = new FromScanner(dataDir, tables);
 							pselect.getFromItem().accept(fromscan);
-							Operator oper = fromscan.source;*/
+							Operator oper = fromscan.source;
+							
+							TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+							List tableList = tablesNamesFinder.getTableList((Select)stmt);
+							for (Iterator iter = tableList.iterator(); iter.hasNext();) {
+								System.out.println("Next table name is: "+iter.next());
+							}
 						}
 					}
 				}

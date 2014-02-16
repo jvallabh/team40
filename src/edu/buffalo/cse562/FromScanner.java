@@ -36,6 +36,7 @@ public class FromScanner implements FromItemVisitor {
 
 	@Override
 	public void visit(Table tableName) {
+		System.out.println("Visit method with tableName is called");
 		CreateTable table = tables.get(tableName.getName());
 		List cols = table.getColumnDefinitions();
 		schema = new Column[cols.size()];
@@ -43,19 +44,19 @@ public class FromScanner implements FromItemVisitor {
 			ColumnDefinition col = (ColumnDefinition)cols.get(i);
 			schema[i]=new Column(tableName, col.getColumnName());
 		}
-		source = new ScanOperator(new File(basePath, tableName.getName()+" .dat"));
+		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"));
 		
 	}
 
 	@Override
 	public void visit(SubSelect arg0) {
-		// TODO Auto-generated method stub
+		System.out.println("Visit method with SubSelect is called");
 		
 	}
 
 	@Override
 	public void visit(SubJoin arg0) {
-		// TODO Auto-generated method stub
+		System.out.println("Visit method with SubJoin is called");
 		
 	}
 
