@@ -1,10 +1,19 @@
 package edu.buffalo.cse562;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class Datum {
 	String element;
 	
 	Datum (String element){
 		this.element = element;
+	}
+	
+	public double Double() {
+		return Double.parseDouble(element);
 	}
 	
 	public long Long() {
@@ -15,16 +24,25 @@ public class Datum {
 		return Integer.parseInt(element);
 	}
 	
-	public String Str() {
+	public String String() {
+		return element;
+	}
+
+	public String toString() {
 		return element;
 	}
 	
 	public float Float() {
 		return Float.parseFloat(element);
 	}
-	public String toString(){
-		return element;
-	}
 	
+	public Date Date() {	
+		try {
+			return (new SimpleDateFormat("YYYY-MM-DD", Locale.ENGLISH).parse(element));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
 
 }
