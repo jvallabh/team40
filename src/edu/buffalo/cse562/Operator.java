@@ -3,6 +3,8 @@
  */
 package edu.buffalo.cse562;
 
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
+
 /**
  * @author The Usual Suspects
  * @Name----------------------EmailAddress
@@ -16,4 +18,6 @@ public interface Operator {
 	public Datum[] readOneTuple();
 	
 	public void reset();
+	
+	public ColumnDefinition[] getSchema();
 }

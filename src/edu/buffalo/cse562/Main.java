@@ -14,9 +14,11 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
@@ -76,25 +78,68 @@ public class Main {
 							PlainSelect pselect = (PlainSelect)select;
 							System.out.println("Printing complete pselect query: "+pselect);
 							System.out.println("Printing get from item: "+pselect.getFromItem());
-							System.out.println("Printing get from item2: "+pselect.getJoins());
+							System.out.println("Printing get joins: "+pselect.getJoins());
 							System.out.println("Where clause is: "+pselect.getWhere());
 							Expression selectCondition = pselect.getWhere();
-							System.out.println("get into is: "+pselect.getInto());
 							FromScanner fromscan = new FromScanner(dataDir, tables);
 							pselect.getFromItem().accept(fromscan);
-							Operator oper = fromscan.source;
+							Operator firstTableOperator = fromscan.source;
 							
-							TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
-							List tableList = tablesNamesFinder.getTableList((Select)stmt);
-							String tableName = null;
-							for (Iterator iter = tableList.iterator(); iter.hasNext();) {
-								tableName = String.valueOf(iter.next());
-								System.out.println("Next table name is: "+tableName);
+							
+							/*
+							 * If JOIN is present in the SQL query then first we are fetching the list of JOIN tables.
+							 * Then for each table we are joining them based on the join condition.
+							 */
+							List<Join> joinDetails = pselect.getJoins();
+							boolean hasJoin = joinDetails == null?false:true;
+							JoinOperator finalTableOperator = null;
+							if(hasJoin){
+								for(Join currJoin:joinDetails){
+									FromScanner tempFromScan = new FromScanner(dataDir, tables);
+									currJoin.getRightItem().accept(tempFromScan);
+									Operator tempTableOperator = tempFromScan.source;
+									if(currJoin.isSimple()){
+										if(finalTableOperator == null){
+											finalTableOperator = new JoinOperator(firstTableOperator, tempTableOperator, null);
+										}
+										else{
+											finalTableOperator = new JoinOperator(finalTableOperator, tempTableOperator, null);
+										}
+									}
+									Expression joinCondition = currJoin.getOnExpression();
+									System.out.println("Join condition is: "+joinCondition);
+									if(joinCondition != null){
+										if(finalTableOperator == null){
+											finalTableOperator = new JoinOperator(firstTableOperator, tempTableOperator, joinCondition);
+										}
+										else{
+											finalTableOperator = new JoinOperator(finalTableOperator, tempTableOperator, joinCondition);
+										}
+										
+									}
+								}
 							}
-							CreateTable currTableObject = tables.get(tableName);
-							ColumnDefinition[] schema = new ColumnDefinition[currTableObject.getColumnDefinitions().size()]; 
-							currTableObject.getColumnDefinitions().toArray(schema);
-							SelectionOperator selectOperator = new SelectionOperator(oper, schema, selectCondition);
+							SelectionOperator selectOperator = null;
+							System.out.println("Has join is: "+hasJoin);
+							if(hasJoin){
+								selectOperator = new SelectionOperator(finalTableOperator, finalTableOperator.schema, selectCondition);
+							}
+							else{
+								TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
+								List tableList = tablesNamesFinder.getTableList((Select)stmt);
+								String tableName = null;
+								for (Iterator iter = tableList.iterator(); iter.hasNext();) {
+									if(tableName == null){
+										tableName = String.valueOf(iter.next());
+									}								
+									System.out.println("Next table name is: "+tableName);
+								}
+								CreateTable currTableObject = tables.get(tableName);
+								ColumnDefinition[] schema = new ColumnDefinition[currTableObject.getColumnDefinitions().size()]; 
+								currTableObject.getColumnDefinitions().toArray(schema);
+								selectOperator = new SelectionOperator(firstTableOperator, schema, selectCondition);
+								
+							}
 							Datum[] currTuple = null;
 							while((currTuple = selectOperator.readOneTuple()) != null){
 								System.out.println(Arrays.toString(currTuple));

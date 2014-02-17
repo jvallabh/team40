@@ -41,7 +41,7 @@ public class FromScanner implements FromItemVisitor {
 		List colDefs = table.getColumnDefinitions();
 		schema = new ColumnDefinition[colDefs.size()];
 		colDefs.toArray(schema);
-		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"));
+		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"), schema);
 		
 	}
 

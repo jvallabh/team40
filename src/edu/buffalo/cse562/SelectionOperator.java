@@ -34,9 +34,11 @@ public class SelectionOperator implements Operator {
 			if (tuple == null) return null;
 			String s;
 			Evaluator eval = new Evaluator(schema, tuple);
-			condition.accept(eval);
-			if (!(eval.getBool())) {
-				tuple = null;
+			if(condition != null){
+				condition.accept(eval);
+				if (!(eval.getBool())) {
+					tuple = null;
+				}				
 			}
 		} while (tuple == null);
 		return tuple;
@@ -45,5 +47,11 @@ public class SelectionOperator implements Operator {
 	@Override
 	public void reset() {
 		input.reset();	
+	}
+
+	@Override
+	public ColumnDefinition[] getSchema() {
+		// TODO Auto-generated method stub
+		return schema;
 	}
 }

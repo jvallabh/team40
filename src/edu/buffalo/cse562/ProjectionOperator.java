@@ -3,6 +3,8 @@
  */
 package edu.buffalo.cse562;
 
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
+
 /**
  * @author The Usual Suspects
  * @Name----------------------EmailAddress
@@ -23,6 +25,12 @@ public class ProjectionOperator implements Operator {
 	public void reset() {
 		// TODO Auto-generated method stub
 		
+	}
+
+	@Override
+	public ColumnDefinition[] getSchema() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }
