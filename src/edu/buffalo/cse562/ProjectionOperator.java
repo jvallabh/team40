@@ -4,6 +4,7 @@
 package edu.buffalo.cse562;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -26,11 +27,25 @@ public class ProjectionOperator implements Operator {
 	Operator input;
 	ColumnDefinition[] schema;
 	List<SelectItem> selectItems;
+	ArrayList<Integer> itemList = new ArrayList();
 	
 	public ProjectionOperator(Operator input, ColumnDefinition[] schema, List<SelectItem> selectItems) {
 		this.input = input;
 		this.schema = schema;
 		this.selectItems = selectItems;
+		Column col;
+		SelectExpressionItem selectExp;
+		if(selectItems.get(0) instanceof SelectExpressionItem) {
+			for (int j=0; j<selectItems.size(); j++) {
+				selectExp = (SelectExpressionItem)selectItems.get(j);
+				col = (Column)selectExp.getExpression();
+				for(int i=0;i<schema.length;i++){
+					if (schema[i].getColumnName().equals(col.getColumnName())) {
+						this.itemList.add(i);
+					}
+				}
+			}
+		}
 	}
 	@Override
 	public Datum[] readOneTuple() {
@@ -41,19 +56,11 @@ public class ProjectionOperator implements Operator {
 		if(tupleTemp==null)
 			return null;
 		else {
-			Column col;
-			SelectExpressionItem selectExp;
-			if(selectItems.get(0) instanceof SelectExpressionItem) {
-				for (int j=0; j<selectItems.size(); j++) {
-					selectExp = (SelectExpressionItem)selectItems.get(j);
-					col = (Column)selectExp.getExpression();
-					for(int i=0;i<schema.length;i++){
-						if (schema[i].getColumnName().equals(col.getColumnName())) {
-							tupleList.add(tupleTemp[i]);
-						}
-					}
+			if(!itemList.isEmpty()){
+				for (int i=0; i<itemList.size(); i++) {
+					tupleList.add(tupleTemp[itemList.get(i)]);
 				}
-				tuple = tupleList.toArray(new Datum[0]);
+			tuple = tupleList.toArray(new Datum[0]);
 			}
 			else if (selectItems.get(0) instanceof AllColumns){
 				tuple = tupleTemp;
@@ -65,7 +72,6 @@ public class ProjectionOperator implements Operator {
 	@Override
 	public void reset() {
 		input.reset();
-		
 	}
 
 	@Override
