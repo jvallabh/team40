@@ -3,7 +3,16 @@
  */
 package edu.buffalo.cse562;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
+import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
+import net.sf.jsqlparser.statement.select.SelectItem;
+import net.sf.jsqlparser.schema.Column;
 
 /**
  * @author The Usual Suspects
@@ -14,16 +23,48 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  * Anil Nalamalapu------------anilkuma@buffalo.edu
  */
 public class ProjectionOperator implements Operator {
-
+	Operator input;
+	ColumnDefinition[] schema;
+	List<SelectItem> selectItems;
+	
+	public ProjectionOperator(Operator input, ColumnDefinition[] schema, List<SelectItem> selectItems) {
+		this.input = input;
+		this.schema = schema;
+		this.selectItems = selectItems;
+	}
 	@Override
 	public Datum[] readOneTuple() {
-		// TODO Auto-generated method stub
-		return null;
+		ArrayList<Datum> tupleList = new ArrayList();
+		Datum[] tupleTemp = null;
+		Datum[] tuple = null;
+		tupleTemp = input.readOneTuple();
+		if(tupleTemp==null)
+			return null;
+		else {
+			Column col;
+			SelectExpressionItem selectExp;
+			if(selectItems.get(0) instanceof SelectExpressionItem) {
+				for (int j=0; j<selectItems.size(); j++) {
+					selectExp = (SelectExpressionItem)selectItems.get(j);
+					col = (Column)selectExp.getExpression();
+					for(int i=0;i<schema.length;i++){
+						if (schema[i].getColumnName().equals(col.getColumnName())) {
+							tupleList.add(tupleTemp[i]);
+						}
+					}
+				}
+				tuple = tupleList.toArray(new Datum[0]);
+			}
+			else if (selectItems.get(0) instanceof AllColumns){
+				tuple = tupleTemp;
+			}
+		}
+		return tuple;
 	}
 
 	@Override
 	public void reset() {
-		// TODO Auto-generated method stub
+		input.reset();
 		
 	}
 

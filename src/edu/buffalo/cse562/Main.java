@@ -22,6 +22,7 @@ import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectItem;
 
 /**
  * @author The Usual Suspects
@@ -80,7 +81,9 @@ public class Main {
 							System.out.println("Printing get from item: "+pselect.getFromItem());
 							System.out.println("Printing get joins: "+pselect.getJoins());
 							System.out.println("Where clause is: "+pselect.getWhere());
+							System.out.println("Select Items"+pselect.getSelectItems());
 							Expression selectCondition = pselect.getWhere();
+							List<SelectItem> selectItems= pselect.getSelectItems();
 							FromScanner fromscan = new FromScanner(dataDir, tables);
 							pselect.getFromItem().accept(fromscan);
 							Operator firstTableOperator = fromscan.source;
@@ -120,9 +123,11 @@ public class Main {
 								}
 							}
 							SelectionOperator selectOperator = null;
+							ProjectionOperator projectOperator = null;
 							System.out.println("Has join is: "+hasJoin);
 							if(hasJoin){
 								selectOperator = new SelectionOperator(finalTableOperator, finalTableOperator.schema, selectCondition);
+								projectOperator = new ProjectionOperator(selectOperator, finalTableOperator.schema, selectItems);
 							}
 							else{
 								TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
@@ -138,10 +143,10 @@ public class Main {
 								ColumnDefinition[] schema = new ColumnDefinition[currTableObject.getColumnDefinitions().size()]; 
 								currTableObject.getColumnDefinitions().toArray(schema);
 								selectOperator = new SelectionOperator(firstTableOperator, schema, selectCondition);
-								
+								projectOperator = new ProjectionOperator(selectOperator,schema,selectItems);
 							}
 							Datum[] currTuple = null;
-							while((currTuple = selectOperator.readOneTuple()) != null){
+							while((currTuple = projectOperator.readOneTuple()) != null){
 								String currDatumString = "";
 								for(Datum currDatum:currTuple){
 									currDatumString = currDatumString+"|"+currDatum;
