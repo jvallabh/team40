@@ -142,7 +142,11 @@ public class Main {
 							}
 							Datum[] currTuple = null;
 							while((currTuple = selectOperator.readOneTuple()) != null){
-								System.out.println(Arrays.toString(currTuple));
+								String currDatumString = "";
+								for(Datum currDatum:currTuple){
+									currDatumString = currDatumString+"|"+currDatum;
+								}
+								System.out.println(currDatumString.substring(1));
 							}
 							
 						}
