@@ -62,14 +62,14 @@ public class Main {
 					if(stmt instanceof CreateTable){
 						CreateTable currTable = (CreateTable)stmt;
 						//currTable.getColumnDefinitions()
-						System.out.println("Column definitions are: "+currTable.getColumnDefinitions());
+						/*System.out.println("Column definitions are: "+currTable.getColumnDefinitions());
 						ListIterator<ColumnDefinition> listIterator = currTable.getColumnDefinitions().listIterator();
 						while(listIterator.hasNext()){
 							ColumnDefinition tempCol = listIterator.next();
 							System.out.println(tempCol);
 							System.out.println(tempCol.getColumnName());
 							System.out.println(tempCol.getColDataType());
-						}
+						}*/
 						String tableName = currTable.getTable().getName();
 						tables.put(tableName, currTable);
 					}
@@ -77,11 +77,11 @@ public class Main {
 						SelectBody select = ((Select)stmt).getSelectBody();
 						if(select instanceof PlainSelect){
 							PlainSelect pselect = (PlainSelect)select;
-							System.out.println("Printing complete pselect query: "+pselect);
+							/*System.out.println("Printing complete pselect query: "+pselect);
 							System.out.println("Printing get from item: "+pselect.getFromItem());
 							System.out.println("Printing get joins: "+pselect.getJoins());
 							System.out.println("Where clause is: "+pselect.getWhere());
-							System.out.println("Select Items"+pselect.getSelectItems());
+							System.out.println("Select Items"+pselect.getSelectItems());*/
 							Expression selectCondition = pselect.getWhere();
 							List<SelectItem> selectItems= pselect.getSelectItems();
 							FromScanner fromscan = new FromScanner(dataDir, tables);
@@ -110,7 +110,7 @@ public class Main {
 										}
 									}
 									Expression joinCondition = currJoin.getOnExpression();
-									System.out.println("Join condition is: "+joinCondition);
+									//System.out.println("Join condition is: "+joinCondition);
 									if(joinCondition != null){
 										if(finalTableOperator == null){
 											finalTableOperator = new JoinOperator(firstTableOperator, tempTableOperator, joinCondition);
@@ -124,7 +124,7 @@ public class Main {
 							}
 							SelectionOperator selectOperator = null;
 							ProjectionOperator projectOperator = null;
-							System.out.println("Has join is: "+hasJoin);
+							//System.out.println("Has join is: "+hasJoin);
 							if(hasJoin){
 								selectOperator = new SelectionOperator(finalTableOperator, finalTableOperator.schema, selectCondition);
 								projectOperator = new ProjectionOperator(selectOperator, finalTableOperator.schema, selectItems);
@@ -137,7 +137,7 @@ public class Main {
 									if(tableName == null){
 										tableName = String.valueOf(iter.next());
 									}								
-									System.out.println("Next table name is: "+tableName);
+									//System.out.println("Next table name is: "+tableName);
 								}
 								CreateTable currTableObject = tables.get(tableName);
 								ColumnDefinition[] schema = new ColumnDefinition[currTableObject.getColumnDefinitions().size()]; 
