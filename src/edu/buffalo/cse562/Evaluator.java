@@ -164,6 +164,7 @@ public class Evaluator implements ExpressionVisitor {
 		boolean rightval = this.getBool();
 		
 		if (leftval && rightval) result = true;
+		else result=false;
 	}
 
 	@Override
