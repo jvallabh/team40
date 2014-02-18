@@ -7,6 +7,7 @@ import java.util.Locale;
 
 import net.sf.jsqlparser.expression.AllComparisonExpression;
 import net.sf.jsqlparser.expression.AnyComparisonExpression;
+import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.CaseExpression;
 import net.sf.jsqlparser.expression.DateValue;
 import net.sf.jsqlparser.expression.DoubleValue;
@@ -53,6 +54,7 @@ public class Evaluator implements ExpressionVisitor {
 	ColumnDefinition[] schema;
 	Datum[] tuple;
 	boolean result;
+	double value;
 	
 	public Evaluator(ColumnDefinition[] schema, Datum[] tuple) {
 		this.schema = schema;
@@ -61,6 +63,14 @@ public class Evaluator implements ExpressionVisitor {
 	
 	public boolean getBool() {
 		return result;
+	}
+	
+	public double getValue() {
+		return value;
+	}
+	
+	public int getIntValue() {
+		return (int)value;
 	}
 	
 	@Override
@@ -149,14 +159,18 @@ public class Evaluator implements ExpressionVisitor {
 
 	@Override
 	public void visit(Subtraction arg0) {
-		// TODO Auto-generated method stub
-		
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		Column col1 = (Column) left;
+		Column col2 = (Column) right;
+		int firstCol, secondCol;
+		firstCol = getColumnID(col1);
+		secondCol = getColumnID(col2);
+		value = tuple[firstCol].Double() - tuple[secondCol].Double();
 	}
 
 	@Override
 	public void visit(AndExpression arg0) {
-		// TODO Auto-generated method stub
-
 		arg0.getLeftExpression().accept(this);
 		boolean leftval = this.getBool();
 		
@@ -169,8 +183,6 @@ public class Evaluator implements ExpressionVisitor {
 
 	@Override
 	public void visit(OrExpression arg0) {
-		// TODO Auto-generated method stub
-
 		arg0.getLeftExpression().accept(this);
 		boolean leftval = this.getBool();
 		
@@ -234,8 +246,8 @@ public class Evaluator implements ExpressionVisitor {
 		else {
 			try {
 				StringValue date = (StringValue)right;	
-				String dater = date.getValue();
-				if ((tuple[firstCol].Date().equals((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dater))))) {
+				String dateVal = date.getValue();
+				if ((tuple[firstCol].Date().equals((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
 					result = true;
 					return;
 				}
@@ -247,61 +259,70 @@ public class Evaluator implements ExpressionVisitor {
 	result = false;	
 }
 
-	@Override
-	public void visit(GreaterThan arg0) {
-		Column col1 = (Column)arg0.getLeftExpression();
-		Expression right = arg0.getRightExpression();
-		int firstCol = -1, secondCol = -1;
+	public int getColumnID(Column col) {
 		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col1.getColumnName())) {
-				firstCol = i;
-				break;
+			if (schema[i].getColumnName().equals(col.getColumnName())) {
+				return i;
 			}
 		}
-		if (right instanceof Column) {
-			Column col2 = (Column) right;
-			int i;
-			for (i=0; i<schema.length; i++) {
-				if (schema[i].getColumnName().equals(col2.getColumnName())) {
-					secondCol = i;
-					break;
-				}
-			}
-			if (schema[i].getColDataType().getDataType().equals("int")) {
-				if(tuple[firstCol].Double() > tuple[secondCol].Double()){
-					result = true;
-					return;
-				}
-			}
-			else {
-				if (tuple[firstCol].Date().after(tuple[secondCol].Date())) {
-					result = true;
-					return;
-				}
-			}
-
-		} else {
-			double rightVal = 0;
-			
-			if (right instanceof LongValue || right instanceof DoubleValue) {
-				rightVal = Double.parseDouble(right.toString());
-
-				if(tuple[firstCol].Double() > rightVal){
-					result = true;
-					return;
-				}
-			}
-			else {
-				try {
-					StringValue date = (StringValue)right;	
-					String dater = date.getValue();
-					if (tuple[firstCol].Date().after((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dater)))) {
+		return -1;
+	}
+	
+	@Override
+	public void visit(GreaterThan arg0) {
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		int firstCol = -1, secondCol = -1;
+		if (!(left instanceof BinaryExpression)) {
+			Column col1 = (Column) left;
+			firstCol = getColumnID(col1);
+			if (right instanceof Column) {
+				Column col2 = (Column) right;
+				secondCol = getColumnID(col2);
+				if (schema[secondCol].getColDataType().getDataType().equals("int")) {
+					if(tuple[firstCol].Double() > tuple[secondCol].Double()){
 						result = true;
 						return;
 					}
-				} catch (ParseException e) {
-					e.printStackTrace();
 				}
+				else {
+					if (tuple[firstCol].Date().after(tuple[secondCol].Date())) {
+						result = true;
+						return;
+					}
+				}
+	
+			} else {
+				double rightVal = 0;
+				
+				if (right instanceof LongValue || right instanceof DoubleValue) {
+					rightVal = Double.parseDouble(right.toString());
+	
+					if(tuple[firstCol].Double() > rightVal){
+						result = true;
+						return;
+					}
+				}
+				else {
+					try {
+						StringValue date = (StringValue)right;	
+						String dateVal = date.getValue();
+						if (tuple[firstCol].Date().after((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal)))) {
+							result = true;
+							return;
+						}
+					} catch (ParseException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		} else {
+			left.accept(this);
+
+			double rightVal = Double.parseDouble(right.toString());
+			if(this.getValue() > rightVal){
+				result = true;
+				return;
 			}
 		}
 		result = false;
@@ -354,8 +375,8 @@ public class Evaluator implements ExpressionVisitor {
 			else {
 				try {
 					StringValue date = (StringValue)right;	
-					String dater = date.getValue();
-					if (!(tuple[firstCol].Date().before((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dater))))) {
+					String dateVal = date.getValue();
+					if (!(tuple[firstCol].Date().before((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
 						result = true;
 						return;
 					}
@@ -432,8 +453,8 @@ public class Evaluator implements ExpressionVisitor {
 			else {
 				try {
 					StringValue date = (StringValue)right;	
-					String dater = date.getValue();
-					if (tuple[firstCol].Date().before((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dater)))) {
+					String dateVal = date.getValue();
+					if (tuple[firstCol].Date().before((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal)))) {
 						result = true;
 						return;
 					}
@@ -492,8 +513,8 @@ public class Evaluator implements ExpressionVisitor {
 			else {
 				try {
 					StringValue date = (StringValue)right;	
-					String dater = date.getValue();
-					if (!(tuple[firstCol].Date().after((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dater))))) {
+					String dateVal = date.getValue();
+					if (!(tuple[firstCol].Date().after((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
 						result = true;
 						return;
 					}
@@ -552,8 +573,8 @@ public class Evaluator implements ExpressionVisitor {
 			else {
 				try {
 					StringValue date = (StringValue)right;	
-					String dater = date.getValue();
-					if (!(tuple[firstCol].Date().equals((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dater))))) {
+					String dateVal = date.getValue();
+					if (!(tuple[firstCol].Date().equals((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
 						result = true;
 						return;
 					}

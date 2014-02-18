@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
+import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.AllColumns;
@@ -27,46 +28,53 @@ public class ProjectionOperator implements Operator {
 	Operator input;
 	ColumnDefinition[] schema;
 	List<SelectItem> selectItems;
-	ArrayList<Integer> itemList = new ArrayList();
+	ArrayList<Integer> itemList = new ArrayList<>();
 	
 	public ProjectionOperator(Operator input, ColumnDefinition[] schema, List<SelectItem> selectItems) {
 		this.input = input;
 		this.schema = schema;
 		this.selectItems = selectItems;
-		Column col;
-		SelectExpressionItem selectExp;
-		if(selectItems.get(0) instanceof SelectExpressionItem) {
+	}
+	
+	public int getColumnID(Column col) {
+		for (int i=0; i<schema.length; i++) {
+			if (schema[i].getColumnName().equals(col.getColumnName())) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
+	@Override
+	public Datum[] readOneTuple() {
+		Datum[] tuple = input.readOneTuple();
+		ArrayList<Datum> tupleList = new ArrayList<>();
+		Datum[] newTuple = null;
+		if(tuple == null)
+			return null;
+		if (selectItems.get(0) instanceof AllColumns)
+			return tuple;
+		else {			
+			Column col;
+			SelectExpressionItem selectExp;
+			Expression exp = null;
 			for (int j=0; j<selectItems.size(); j++) {
 				selectExp = (SelectExpressionItem)selectItems.get(j);
-				col = (Column)selectExp.getExpression();
-				for(int i=0;i<schema.length;i++){
-					if (schema[i].getColumnName().equals(col.getColumnName())) {
-						this.itemList.add(i);
+				exp = selectExp.getExpression();
+				if (exp instanceof Column) {
+					col = (Column)exp;
+					tupleList.add(tuple[getColumnID(col)]);
+				} else if (exp instanceof BinaryExpression) {
+					Evaluator eval = new Evaluator(schema, tuple);
+					if(exp != null){
+						exp.accept(eval);
+						tupleList.add(new Datum(Integer.toString(eval.getIntValue())));
 					}
 				}
 			}
+			newTuple = tupleList.toArray(new Datum[0]);
+			return newTuple;
 		}
-	}
-	@Override
-	public Datum[] readOneTuple() {
-		ArrayList<Datum> tupleList = new ArrayList();
-		Datum[] tupleTemp = null;
-		Datum[] tuple = null;
-		tupleTemp = input.readOneTuple();
-		if(tupleTemp==null)
-			return null;
-		else {
-			if(!itemList.isEmpty()){
-				for (int i=0; i<itemList.size(); i++) {
-					tupleList.add(tupleTemp[itemList.get(i)]);
-				}
-			tuple = tupleList.toArray(new Datum[0]);
-			}
-			else if (selectItems.get(0) instanceof AllColumns){
-				tuple = tupleTemp;
-			}
-		}
-		return tuple;
 	}
 
 	@Override
