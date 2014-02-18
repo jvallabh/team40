@@ -29,7 +29,7 @@ public class JoinOperator implements Operator {
 		this.input1 = input1;
 		this.input2 = input2;
 		this.condition = condition;
-		this.schema =getSchema(input1.getSchema(), input2.getSchema());
+		this.schema = getSchema(input1.getSchema(), input2.getSchema());
 		
 		
 	}
@@ -43,6 +43,7 @@ public class JoinOperator implements Operator {
 				tuple1 = input1.readOneTuple();
 				if(tuple1==null)
 					return null;
+				input2.reset();
 				tuple2 = input2.readOneTuple();
 			}
 			else
