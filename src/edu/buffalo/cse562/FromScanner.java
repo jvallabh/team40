@@ -36,7 +36,7 @@ public class FromScanner implements FromItemVisitor {
 
 	@Override
 	public void visit(Table tableName) {
-		System.out.println("Visit method with tableName is called");
+		//System.out.println("Visit method with tableName is called");
 		CreateTable table = tables.get(tableName.getName());
 		List colDefs = table.getColumnDefinitions();
 		schema = new ColumnDefinition[colDefs.size()];
@@ -47,13 +47,13 @@ public class FromScanner implements FromItemVisitor {
 
 	@Override
 	public void visit(SubSelect arg0) {
-		System.out.println("Visit method with SubSelect is called");
+		//System.out.println("Visit method with SubSelect is called");
 		
 	}
 
 	@Override
 	public void visit(SubJoin arg0) {
-		System.out.println("Visit method with SubJoin is called");
+		//System.out.println("Visit method with SubJoin is called");
 		
 	}
 

@@ -33,15 +33,16 @@ import net.sf.jsqlparser.statement.select.SelectItem;
  * Anil Nalamalapu------------anilkuma@buffalo.edu
  */
 public class Main {
+	public static File dataDir;
+	public static HashMap<String, CreateTable> tables;
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		int i;
-		File dataDir = null;
 		ArrayList<File> sqlFiles = new ArrayList<>();
-		HashMap<String, CreateTable> tables = new HashMap<>();
+		tables = new HashMap<>();
 		for(i=0;i<args.length;i++){
 			if(args[i].equals("--data")){
 				dataDir = new File(args[i+1]);
@@ -62,14 +63,14 @@ public class Main {
 					if(stmt instanceof CreateTable){
 						CreateTable currTable = (CreateTable)stmt;
 						//currTable.getColumnDefinitions()
-						System.out.println("Column definitions are: "+currTable.getColumnDefinitions());
+						/*System.out.println("Column definitions are: "+currTable.getColumnDefinitions());
 						ListIterator<ColumnDefinition> listIterator = currTable.getColumnDefinitions().listIterator();
 						while(listIterator.hasNext()){
 							ColumnDefinition tempCol = listIterator.next();
 							System.out.println(tempCol);
 							System.out.println(tempCol.getColumnName());
 							System.out.println(tempCol.getColDataType());
-						}
+						}*/
 						String tableName = currTable.getTable().getName();
 						tables.put(tableName, currTable);
 					}
@@ -77,11 +78,11 @@ public class Main {
 						SelectBody select = ((Select)stmt).getSelectBody();
 						if(select instanceof PlainSelect){
 							PlainSelect pselect = (PlainSelect)select;
-							System.out.println("Printing complete pselect query: "+pselect);
+							/*System.out.println("Printing complete pselect query: "+pselect);
 							System.out.println("Printing get from item: "+pselect.getFromItem());
 							System.out.println("Printing get joins: "+pselect.getJoins());
 							System.out.println("Where clause is: "+pselect.getWhere());
-							System.out.println("Select Items"+pselect.getSelectItems());
+							System.out.println("Select Items"+pselect.getSelectItems());*/
 							Expression selectCondition = pselect.getWhere();
 							List<SelectItem> selectItems= pselect.getSelectItems();
 							FromScanner fromscan = new FromScanner(dataDir, tables);
@@ -95,39 +96,14 @@ public class Main {
 							 */
 							List<Join> joinDetails = pselect.getJoins();
 							boolean hasJoin = joinDetails == null?false:true;
-							JoinOperator finalTableOperator = null;
-							if(hasJoin){
-								for(Join currJoin:joinDetails){
-									FromScanner tempFromScan = new FromScanner(dataDir, tables);
-									currJoin.getRightItem().accept(tempFromScan);
-									Operator tempTableOperator = tempFromScan.source;
-									if(currJoin.isSimple()){
-										if(finalTableOperator == null){
-											finalTableOperator = new JoinOperator(firstTableOperator, tempTableOperator, null);
-										}
-										else{
-											finalTableOperator = new JoinOperator(finalTableOperator, tempTableOperator, null);
-										}
-									}
-									Expression joinCondition = currJoin.getOnExpression();
-									System.out.println("Join condition is: "+joinCondition);
-									if(joinCondition != null){
-										if(finalTableOperator == null){
-											finalTableOperator = new JoinOperator(firstTableOperator, tempTableOperator, joinCondition);
-										}
-										else{
-											finalTableOperator = new JoinOperator(finalTableOperator, tempTableOperator, joinCondition);
-										}
-										
-									}
-								}
-							}
+							JoinOperator finalJoinedOperator = null;
 							SelectionOperator selectOperator = null;
 							ProjectionOperator projectOperator = null;
-							System.out.println("Has join is: "+hasJoin);
+							//System.out.println("Has join is: "+hasJoin);
 							if(hasJoin){
-								selectOperator = new SelectionOperator(finalTableOperator, finalTableOperator.schema, selectCondition);
-								projectOperator = new ProjectionOperator(selectOperator, finalTableOperator.schema, selectItems);
+								finalJoinedOperator = (JoinOperator) getJoinedOperator(firstTableOperator, joinDetails);
+								selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, selectCondition);
+								projectOperator = new ProjectionOperator(selectOperator, finalJoinedOperator.schema, selectItems);
 							}
 							else{
 								TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
@@ -137,7 +113,7 @@ public class Main {
 									if(tableName == null){
 										tableName = String.valueOf(iter.next());
 									}								
-									System.out.println("Next table name is: "+tableName);
+									//System.out.println("Next table name is: "+tableName);
 								}
 								CreateTable currTableObject = tables.get(tableName);
 								ColumnDefinition[] schema = new ColumnDefinition[currTableObject.getColumnDefinitions().size()]; 
@@ -145,14 +121,7 @@ public class Main {
 								selectOperator = new SelectionOperator(firstTableOperator, schema, selectCondition);
 								projectOperator = new ProjectionOperator(selectOperator,schema,selectItems);
 							}
-							Datum[] currTuple = null;
-							while((currTuple = projectOperator.readOneTuple()) != null){
-								String currDatumString = "";
-								for(Datum currDatum:currTuple){
-									currDatumString = currDatumString+"|"+currDatum;
-								}
-								System.out.println(currDatumString.substring(1));
-							}
+							printOutputTuples(projectOperator);
 							
 						}
 					}
@@ -168,6 +137,47 @@ public class Main {
 		//System.out.println(tables);
 		//System.out.println(sqlFiles);
 
+	}
+	
+	public static void printOutputTuples(Operator inputOperator){
+		Datum[] currTuple = null;
+		while((currTuple = inputOperator.readOneTuple()) != null){
+			String currDatumString = "";
+			for(Datum currDatum:currTuple){
+				currDatumString = currDatumString+"|"+currDatum;
+			}
+			System.out.println(currDatumString.substring(1));
+		}
+		
+	}
+	
+	public static Operator getJoinedOperator(Operator firstTable, List<Join> joinDetails){
+		JoinOperator finalJoinedOperator = null;
+		for(Join currJoin:joinDetails){
+			FromScanner tempFromScan = new FromScanner(dataDir, tables);
+			currJoin.getRightItem().accept(tempFromScan);
+			Operator tempTableOperator = tempFromScan.source;
+			if(currJoin.isSimple()){
+				if(finalJoinedOperator == null){
+					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, null);
+				}
+				else{
+					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, null);
+				}
+			}
+			Expression joinCondition = currJoin.getOnExpression();
+			//System.out.println("Join condition is: "+joinCondition);
+			if(joinCondition != null){
+				if(finalJoinedOperator == null){
+					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, joinCondition);
+				}
+				else{
+					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, joinCondition);
+				}
+				
+			}
+		}
+		return finalJoinedOperator;
 	}
 
 }
