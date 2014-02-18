@@ -62,15 +62,6 @@ public class Main {
 				while((stmt = parser.Statement()) != null){
 					if(stmt instanceof CreateTable){
 						CreateTable currTable = (CreateTable)stmt;
-						//currTable.getColumnDefinitions()
-						/*System.out.println("Column definitions are: "+currTable.getColumnDefinitions());
-						ListIterator<ColumnDefinition> listIterator = currTable.getColumnDefinitions().listIterator();
-						while(listIterator.hasNext()){
-							ColumnDefinition tempCol = listIterator.next();
-							System.out.println(tempCol);
-							System.out.println(tempCol.getColumnName());
-							System.out.println(tempCol.getColDataType());
-						}*/
 						String tableName = currTable.getTable().getName();
 						tables.put(tableName, currTable);
 					}
@@ -78,18 +69,12 @@ public class Main {
 						SelectBody select = ((Select)stmt).getSelectBody();
 						if(select instanceof PlainSelect){
 							PlainSelect pselect = (PlainSelect)select;
-							/*System.out.println("Printing complete pselect query: "+pselect);
-							System.out.println("Printing get from item: "+pselect.getFromItem());
-							System.out.println("Printing get joins: "+pselect.getJoins());
-							System.out.println("Where clause is: "+pselect.getWhere());
-							System.out.println("Select Items"+pselect.getSelectItems());*/
 							Expression selectCondition = pselect.getWhere();
 							List<SelectItem> selectItems= pselect.getSelectItems();
 							FromScanner fromscan = new FromScanner(dataDir, tables);
 							pselect.getFromItem().accept(fromscan);
 							Operator firstTableOperator = fromscan.source;
-							
-							
+														
 							/*
 							 * If JOIN is present in the SQL query then first we are fetching the list of JOIN tables.
 							 * Then for each table we are joining them based on the join condition.
@@ -97,30 +82,39 @@ public class Main {
 							List<Join> joinDetails = pselect.getJoins();
 							boolean hasJoin = joinDetails == null?false:true;
 							JoinOperator finalJoinedOperator = null;
+							
+							List<Column> groupByColumns = pselect.getGroupByColumnReferences();
+							boolean hasGroupBy = groupByColumns == null?false:true;
+							GroupByOperator finalGrpByOperator = null;
+							
 							SelectionOperator selectOperator = null;
 							ProjectionOperator projectOperator = null;
-							//System.out.println("Has join is: "+hasJoin);
+							
 							if(hasJoin){
 								finalJoinedOperator = (JoinOperator) getJoinedOperator(firstTableOperator, joinDetails);
 								selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, selectCondition);
-								projectOperator = new ProjectionOperator(selectOperator, finalJoinedOperator.schema, selectItems);
 							}
+							//This portion of code is to get the name of table immediately after FROM, that is first table name in the SQL query
 							else{
 								TablesNamesFinder tablesNamesFinder = new TablesNamesFinder();
 								List tableList = tablesNamesFinder.getTableList((Select)stmt);
 								String tableName = null;
 								for (Iterator iter = tableList.iterator(); iter.hasNext();) {
-									if(tableName == null){
-										tableName = String.valueOf(iter.next());
-									}								
-									//System.out.println("Next table name is: "+tableName);
+								  tableName = String.valueOf(iter.next());
+								  break;
 								}
 								CreateTable currTableObject = tables.get(tableName);
 								ColumnDefinition[] schema = new ColumnDefinition[currTableObject.getColumnDefinitions().size()]; 
 								currTableObject.getColumnDefinitions().toArray(schema);
 								selectOperator = new SelectionOperator(firstTableOperator, schema, selectCondition);
-								projectOperator = new ProjectionOperator(selectOperator,schema,selectItems);
 							}
+							
+							if(hasGroupBy){
+								finalGrpByOperator = (GroupByOperator) getGroupByOperator(selectOperator, groupByColumns);
+							}
+							
+							Operator inputToProject = finalGrpByOperator!=null?finalGrpByOperator:selectOperator;
+							projectOperator = new ProjectionOperator(inputToProject,inputToProject.getSchema(),selectItems);
 							printOutputTuples(projectOperator);
 							
 						}
@@ -134,9 +128,6 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
-		//System.out.println(tables);
-		//System.out.println(sqlFiles);
-
 	}
 	
 	public static void printOutputTuples(Operator inputOperator){
@@ -166,18 +157,43 @@ public class Main {
 				}
 			}
 			Expression joinCondition = currJoin.getOnExpression();
-			//System.out.println("Join condition is: "+joinCondition);
 			if(joinCondition != null){
 				if(finalJoinedOperator == null){
 					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, joinCondition);
 				}
 				else{
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, joinCondition);
-				}
-				
+				}				
 			}
 		}
 		return finalJoinedOperator;
+	}
+	
+	public static Operator getGroupByOperator(Operator inputOperator, List<Column> groupByColumns){
+		GroupByOperator finalGrpByOperator = null;
+		for(Column currColumn:groupByColumns){
+			if(finalGrpByOperator == null){
+				finalGrpByOperator = new GroupByOperator(inputOperator, currColumn, inputOperator.getSchema());
+			}
+			else{
+				finalGrpByOperator = new GroupByOperator(finalGrpByOperator, currColumn, finalGrpByOperator.getSchema());
+			}			
+		}
+		return finalGrpByOperator;
+	}
+	
+	public static ColumnDefinition getColumnDefinitionOfColumn(Column column){
+		//System.out.println("Curr table name is: "+column.getTable().getName()+" "+column.getTable().getAlias()+" "+column.getTable().getSchemaName()+" "+column.getTable().getWholeTableName());
+		CreateTable currTable = tables.get(column.getTable().getName());
+		List<ColumnDefinition> colDefList = currTable.getColumnDefinitions();
+		ColumnDefinition columnDef=null;
+		for(ColumnDefinition currDef:colDefList){
+			if(column.getColumnName().equals(currDef.getColumnName())){
+				columnDef = currDef;
+				break;
+			}
+		}
+		return columnDef;		
 	}
 
 }
