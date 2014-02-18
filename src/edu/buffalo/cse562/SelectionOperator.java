@@ -32,7 +32,7 @@ public class SelectionOperator implements Operator {
 		do {
 			tuple = input.readOneTuple();
 			if (tuple == null) return null;
-			String s;
+			
 			Evaluator eval = new Evaluator(schema, tuple);
 			if(condition != null){
 				condition.accept(eval);
