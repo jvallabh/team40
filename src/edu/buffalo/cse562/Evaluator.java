@@ -141,20 +141,38 @@ public class Evaluator implements ExpressionVisitor {
 
 	@Override
 	public void visit(Addition arg0) {
-		// TODO Auto-generated method stub
-		
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		Column col1 = (Column) left;
+		Column col2 = (Column) right;
+		int firstCol, secondCol;
+		firstCol = getColumnID(col1);
+		secondCol = getColumnID(col2);
+		value = tuple[firstCol].Double() + tuple[secondCol].Double();
 	}
 
 	@Override
 	public void visit(Division arg0) {
-		// TODO Auto-generated method stub
-		
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		Column col1 = (Column) left;
+		Column col2 = (Column) right;
+		int firstCol, secondCol;
+		firstCol = getColumnID(col1);
+		secondCol = getColumnID(col2);
+		value = tuple[firstCol].Double() / tuple[secondCol].Double();
 	}
 
 	@Override
 	public void visit(Multiplication arg0) {
-		// TODO Auto-generated method stub
-		
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		Column col1 = (Column) left;
+		Column col2 = (Column) right;
+		int firstCol, secondCol;
+		firstCol = getColumnID(col1);
+		secondCol = getColumnID(col2);
+		value = tuple[firstCol].Double() * tuple[secondCol].Double();
 	}
 
 	@Override
