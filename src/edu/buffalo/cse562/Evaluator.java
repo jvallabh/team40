@@ -2,7 +2,7 @@ package edu.buffalo.cse562;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.sql.Date;
 import java.util.Locale;
 
 import net.sf.jsqlparser.expression.AllComparisonExpression;
@@ -59,6 +59,10 @@ public class Evaluator implements ExpressionVisitor {
 	public Evaluator(ColumnDefinition[] schema, Datum[] tuple) {
 		this.schema = schema;
 		this.tuple = tuple;
+	}
+	
+	public enum Type {
+		INT, STRING, DOUBLE, DATE
 	}
 	
 	public boolean getBool() {
@@ -129,8 +133,8 @@ public class Evaluator implements ExpressionVisitor {
 
 	@Override
 	public void visit(Parenthesis arg0) {
-		// TODO Auto-generated method stub
-		
+		//TODO: have to correctly implement this
+		arg0.getExpression().accept(this);
 	}
 
 	@Override
@@ -139,52 +143,189 @@ public class Evaluator implements ExpressionVisitor {
 		
 	}
 
+	public Type getNumType(Expression expr) {
+		if (expr instanceof Column) {
+			Column col = (Column) expr;
+			int colID;
+			// Gets the corresponding columnID from the schema
+			for (colID=0; colID<schema.length; colID++) {
+				if (schema[colID].getColumnName().equals(col.getColumnName())) {
+					break;
+				}
+			}
+			// Sets the data-type of the element in the column
+			if (schema[colID].getColDataType().getDataType().equals("int")) {
+				return Type.INT;
+			} else if (schema[colID].getColDataType().getDataType().equals("double")) {
+				return Type.DOUBLE;
+			} 
+			// Sets the data-type of the element
+		} else if (expr instanceof LongValue) {
+			return Type.INT;
+		} else if (expr instanceof DoubleValue) {
+			return Type.DOUBLE;
+		}
+		return Type.DOUBLE;
+	}
+	
+	public Type getDataType(Expression left, Expression right) {
+		Expression expr;
+		if (left instanceof Column) {
+			expr = left;
+		} else {
+			expr = right;
+		}
+		if (expr instanceof Column) {
+			Column col = (Column) expr;
+			int colID;
+			// Gets the corresponding columnID from the schema
+			for (colID=0; colID<schema.length; colID++) {
+				if (schema[colID].getColumnName().equals(col.getColumnName())) {
+					break;
+				}
+			}
+			// Sets the data-type of the element in the column
+			if (schema[colID].getColDataType().getDataType().equals("int")) {
+				return Type.INT;
+			} else if (schema[colID].getColDataType().getDataType().equals("double")) {
+				return Type.DOUBLE;
+			} else if (schema[colID].getColDataType().getDataType().equals("string")) {
+				return Type.STRING;
+			} else if (schema[colID].getColDataType().getDataType().equals("date")) {
+				return Type.DATE;
+			}
+			// Sets the data-type of the element
+		} else if (expr instanceof LongValue) {
+			return Type.INT;
+		} else if (expr instanceof DoubleValue) {
+			return Type.DOUBLE;
+		} else if (expr instanceof StringValue) {
+			return Type.STRING;
+		} else if (expr instanceof DateValue) {
+			return Type.DATE;
+		}
+		return Type.STRING;
+	}
+	
+	//TODO Have to handle if either the right or left is a Binary Expression instead of just a value
 	@Override
 	public void visit(Addition arg0) {
 		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		Column col1 = (Column) left;
-		Column col2 = (Column) right;
-		int firstCol, secondCol;
-		firstCol = getColumnID(col1);
-		secondCol = getColumnID(col2);
-		value = tuple[firstCol].Double() + tuple[secondCol].Double();
+		Type dataType = getNumType(left);
+		String leftVal, rightVal;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			leftVal = tuple[leftCol].String();
+		} else {
+			leftVal = left.toString();
+		}
+		if (right instanceof Column) {
+			Column col2 = (Column) right;
+			int rightCol = getColumnID(col2);
+			rightVal = tuple[rightCol].String();
+		} else {
+			rightVal = right.toString();
+		}
+		switch (dataType) {
+			case INT:
+				value = Integer.parseInt(leftVal) + Integer.parseInt(rightVal);
+				break;
+			case DOUBLE:
+				value = Double.parseDouble(leftVal) + Double.parseDouble(rightVal);
+				break;
+		}
 	}
 
 	@Override
 	public void visit(Division arg0) {
 		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		Column col1 = (Column) left;
-		Column col2 = (Column) right;
-		int firstCol, secondCol;
-		firstCol = getColumnID(col1);
-		secondCol = getColumnID(col2);
-		value = tuple[firstCol].Double() / tuple[secondCol].Double();
+		Type dataType = getNumType(left);
+		String leftVal, rightVal;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			leftVal = tuple[leftCol].String();
+		} else {
+			leftVal = left.toString();
+		}
+		if (right instanceof Column) {
+			Column col2 = (Column) right;
+			int rightCol = getColumnID(col2);
+			rightVal = tuple[rightCol].String();
+		} else {
+			rightVal = right.toString();
+		}
+		switch (dataType) {
+			case INT:
+				value = Integer.parseInt(leftVal)/Integer.parseInt(rightVal);
+				break;
+			case DOUBLE:
+				value = Double.parseDouble(leftVal)/Double.parseDouble(rightVal);
+				break;
+		}
 	}
 
 	@Override
 	public void visit(Multiplication arg0) {
 		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		Column col1 = (Column) left;
-		Column col2 = (Column) right;
-		int firstCol, secondCol;
-		firstCol = getColumnID(col1);
-		secondCol = getColumnID(col2);
-		value = tuple[firstCol].Double() * tuple[secondCol].Double();
+		Type dataType = getNumType(left);
+		String leftVal, rightVal;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			leftVal = tuple[leftCol].String();
+		} else {
+			leftVal = left.toString();
+		}
+		if (right instanceof Column) {
+			Column col2 = (Column) right;
+			int rightCol = getColumnID(col2);
+			rightVal = tuple[rightCol].String();
+		} else {
+			rightVal = right.toString();
+		}
+		switch (dataType) {
+			case INT:
+				value = Integer.parseInt(leftVal)*Integer.parseInt(rightVal);
+				break;
+			case DOUBLE:
+				value = Double.parseDouble(leftVal)*Double.parseDouble(rightVal);
+				break;
+		}
 	}
 
 	@Override
 	public void visit(Subtraction arg0) {
 		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		Column col1 = (Column) left;
-		Column col2 = (Column) right;
-		int firstCol, secondCol;
-		firstCol = getColumnID(col1);
-		secondCol = getColumnID(col2);
-		value = tuple[firstCol].Double() - tuple[secondCol].Double();
+		Type dataType = getNumType(left);
+		String leftVal, rightVal;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			leftVal = tuple[leftCol].String();
+		} else {
+			leftVal = left.toString();
+		}
+		if (right instanceof Column) {
+			Column col2 = (Column) right;
+			int rightCol = getColumnID(col2);
+			rightVal = tuple[rightCol].String();
+		} else {
+			rightVal = right.toString();
+		}
+		switch (dataType) {
+			case INT:
+				value = Integer.parseInt(leftVal) - Integer.parseInt(rightVal);
+				break;
+			case DOUBLE:
+				value = Double.parseDouble(leftVal) - Double.parseDouble(rightVal);
+				break;
+		}
 	}
 
 	@Override
@@ -195,8 +336,10 @@ public class Evaluator implements ExpressionVisitor {
 		arg0.getRightExpression().accept(this);
 		boolean rightval = this.getBool();
 		
-		if (leftval && rightval) result = true;
-		else result=false;
+		if (leftval && rightval) 
+			result = true;
+		else 
+			result=false;
 	}
 
 	@Override
@@ -207,8 +350,10 @@ public class Evaluator implements ExpressionVisitor {
 		arg0.getRightExpression().accept(this);
 		boolean rightval = this.getBool();
 		
-		if (leftval || rightval) result = true;
-		else result=false;
+		if (leftval || rightval) 
+			result = true;
+		else 
+			result=false;
 	}
 
 	@Override
@@ -217,65 +362,16 @@ public class Evaluator implements ExpressionVisitor {
 		
 	}
 
-	@Override
-	public void visit(EqualsTo arg0) {		
-	Column col1 = (Column)arg0.getLeftExpression();
-	Expression right = arg0.getRightExpression();
-	int firstCol = -1, secondCol = -1;
-	for (int i=0; i<schema.length; i++) {
-		if (schema[i].getColumnName().equals(col1.getColumnName())) {
-			firstCol = i;
-			break;
-		}
+	public Date getDateVal(Expression expr) {
+		try {
+			StringValue dateVal = (StringValue)expr;	
+			String date = dateVal.getValue();
+			return new Date(new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(date).getTime());
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}	
 	}
-	if (right instanceof Column) {
-		Column col2 = (Column) right;
-		int i;
-		for (i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col2.getColumnName())) {
-				secondCol = i;
-				break;
-			}
-		}
-		if (schema[i].getColDataType().getDataType().equals("int")) {
-			if(tuple[firstCol].Double() == tuple[secondCol].Double()){
-				result = true;
-				return;
-			}
-		}
-		else {
-			if ((tuple[firstCol].Date().equals(tuple[secondCol].Date()))) {
-				result = true;
-				return;
-			}
-		}
-
-	} else {
-		double rightVal = 0;
-		
-		if (right instanceof LongValue || right instanceof DoubleValue) {
-			rightVal = Double.parseDouble(right.toString());
-
-			if(tuple[firstCol].Double() == rightVal){
-				result = true;
-				return;
-			}
-		}
-		else {
-			try {
-				StringValue date = (StringValue)right;	
-				String dateVal = date.getValue();
-				if ((tuple[firstCol].Date().equals((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
-					result = true;
-					return;
-				}
-			} catch (ParseException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-	result = false;	
-}
 
 	public int getColumnID(Column col) {
 		for (int i=0; i<schema.length; i++) {
@@ -287,121 +383,195 @@ public class Evaluator implements ExpressionVisitor {
 	}
 	
 	@Override
+	public void visit(EqualsTo arg0) {	
+		Expression left = arg0.getLeftExpression();
+		Expression right = arg0.getRightExpression();
+		Type dataType = getDataType(left, right);
+		String leftVal = null, rightVal = null;
+		Date leftDateVal = null, rightDateVal = null;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			if (dataType == Type.DATE) {
+				leftDateVal = tuple[leftCol].Date();
+			} else {
+				leftVal = tuple[leftCol].String();
+			}
+		} else {
+			if (dataType == Type.DATE) {
+				leftDateVal = getDateVal(left);
+			} else if (dataType == Type.STRING){
+				leftVal = ((StringValue)left).getValue();
+			} else {
+				leftVal = left.toString();
+			}
+		}
+		if (right instanceof Column) {
+			Column col2 = (Column) right;
+			int rightCol = getColumnID(col2);
+			if (dataType == Type.DATE) {
+				rightDateVal = tuple[rightCol].Date();
+			} else {
+				rightVal = tuple[rightCol].String();
+			}
+		} else {
+			if (dataType == Type.DATE) {
+				rightDateVal = getDateVal(right);
+			} else if (dataType == Type.STRING){
+				rightVal = ((StringValue)right).getValue();
+			} else {
+				rightVal = right.toString();
+			}
+		}
+		switch (dataType) {
+			case INT:
+				if (Integer.parseInt(leftVal) == Integer.parseInt(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case DOUBLE:
+				if (Double.parseDouble(leftVal) == Double.parseDouble(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case STRING:
+				if (leftVal.equals(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case DATE:
+				if (leftDateVal.equals(rightDateVal)) {
+					result = true;
+					return;
+				}
+				break;
+		}
+		result = false;
+	}
+	
+	@Override
 	public void visit(GreaterThan arg0) {
 		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		int firstCol = -1, secondCol = -1;
-		if (!(left instanceof BinaryExpression)) {
+		Type dataType = getDataType(left, right);
+		String leftVal = null, rightVal = null;
+		Date leftDateVal = null, rightDateVal = null;
+		if (left instanceof Column) {
 			Column col1 = (Column) left;
-			firstCol = getColumnID(col1);
-			if (right instanceof Column) {
-				Column col2 = (Column) right;
-				secondCol = getColumnID(col2);
-				if (schema[secondCol].getColDataType().getDataType().equals("int")) {
-					if(tuple[firstCol].Double() > tuple[secondCol].Double()){
-						result = true;
-						return;
-					}
-				}
-				else {
-					if (tuple[firstCol].Date().after(tuple[secondCol].Date())) {
-						result = true;
-						return;
-					}
-				}
-	
+			int leftCol = getColumnID(col1);
+			if (dataType == Type.DATE) {
+				leftDateVal = tuple[leftCol].Date();
 			} else {
-				double rightVal = 0;
-				
-				if (right instanceof LongValue || right instanceof DoubleValue) {
-					rightVal = Double.parseDouble(right.toString());
-	
-					if(tuple[firstCol].Double() > rightVal){
-						result = true;
-						return;
-					}
-				}
-				else {
-					try {
-						StringValue date = (StringValue)right;	
-						String dateVal = date.getValue();
-						if (tuple[firstCol].Date().after((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal)))) {
-							result = true;
-							return;
-						}
-					} catch (ParseException e) {
-						e.printStackTrace();
-					}
-				}
+				leftVal = tuple[leftCol].String();
 			}
 		} else {
-			left.accept(this);
-
-			double rightVal = Double.parseDouble(right.toString());
-			if(this.getValue() > rightVal){
-				result = true;
-				return;
+			if (dataType == Type.DATE) {
+				leftDateVal = getDateVal(left);
+			} else {
+				leftVal = left.toString();
 			}
+		}
+		if (right instanceof Column) {
+			Column col2 = (Column) right;
+			int rightCol = getColumnID(col2);
+			if (dataType == Type.DATE) {
+				rightDateVal = tuple[rightCol].Date();
+			} else {
+				rightVal = tuple[rightCol].String();
+			}
+		} else {
+			if (dataType == Type.DATE) {
+				rightDateVal = getDateVal(right);
+			} else {
+				rightVal = right.toString();
+			}
+		}
+		switch (dataType) {
+			case INT:
+				if (Integer.parseInt(leftVal) > Integer.parseInt(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case DOUBLE:
+				if (Double.parseDouble(leftVal) > Double.parseDouble(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case STRING:
+				break;
+			case DATE:
+				if (leftDateVal.after(rightDateVal)) {
+					result = true;
+					return;
+				}
+				break;
 		}
 		result = false;
 	}
 
 	@Override
 	public void visit(GreaterThanEquals arg0) {
-		Column col1 = (Column)arg0.getLeftExpression();
+		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		int firstCol = -1, secondCol = -1;
-		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col1.getColumnName())) {
-				firstCol = i;
-				break;
+		Type dataType = getDataType(left, right);
+		String leftVal = null, rightVal = null;
+		Date leftDateVal = null, rightDateVal = null;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			if (dataType == Type.DATE) {
+				leftDateVal = tuple[leftCol].Date();
+			} else {
+				leftVal = tuple[leftCol].String();
+			}
+		} else {
+			if (dataType == Type.DATE) {
+				leftDateVal = getDateVal(left);
+			} else {
+				leftVal = left.toString();
 			}
 		}
 		if (right instanceof Column) {
 			Column col2 = (Column) right;
-			int i;
-			for (i=0; i<schema.length; i++) {
-				if (schema[i].getColumnName().equals(col2.getColumnName())) {
-					secondCol = i;
-					break;
-				}
+			int rightCol = getColumnID(col2);
+			if (dataType == Type.DATE) {
+				rightDateVal = tuple[rightCol].Date();
+			} else {
+				rightVal = tuple[rightCol].String();
 			}
-			if (schema[i].getColDataType().getDataType().equals("int")) {
-				if(tuple[firstCol].Double() >= tuple[secondCol].Double()){
-					result = true;
-					return;
-				}
-			}
-			else {
-				if (!(tuple[firstCol].Date().before(tuple[secondCol].Date()))) {
-					result = true;
-					return;
-				}
-			}
-
 		} else {
-			double rightVal = 0;
-			
-			if (right instanceof LongValue || right instanceof DoubleValue) {
-				rightVal = Double.parseDouble(right.toString());
-
-				if(tuple[firstCol].Double() >= rightVal){
+			if (dataType == Type.DATE) {
+				rightDateVal = getDateVal(right);
+			} else {
+				rightVal = right.toString();
+			}
+		}
+		switch (dataType) {
+			case INT:
+				if (Integer.parseInt(leftVal) >= Integer.parseInt(rightVal)) {
 					result = true;
 					return;
 				}
-			}
-			else {
-				try {
-					StringValue date = (StringValue)right;	
-					String dateVal = date.getValue();
-					if (!(tuple[firstCol].Date().before((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
-						result = true;
-						return;
-					}
-				} catch (ParseException e) {
-					e.printStackTrace();
+				break;
+			case DOUBLE:
+				if (Double.parseDouble(leftVal) >= Double.parseDouble(rightVal)) {
+					result = true;
+					return;
 				}
-			}
+				break;
+			case STRING:
+				break;
+			case DATE:
+				if (!(leftDateVal.before(rightDateVal))) {
+					result = true;
+					return;
+				}
+				break;
 		}
 		result = false;
 	}
@@ -426,184 +596,198 @@ public class Evaluator implements ExpressionVisitor {
 
 	@Override
 	public void visit(MinorThan arg0) {
-		Column col1 = (Column)arg0.getLeftExpression();
+		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		int firstCol = -1, secondCol = -1;
-		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col1.getColumnName())) {
-				firstCol = i;
-				break;
+		Type dataType = getDataType(left, right);
+		String leftVal = null, rightVal = null;
+		Date leftDateVal = null, rightDateVal = null;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			if (dataType == Type.DATE) {
+				leftDateVal = tuple[leftCol].Date();
+			} else {
+				leftVal = tuple[leftCol].String();
+			}
+		} else {
+			if (dataType == Type.DATE) {
+				leftDateVal = getDateVal(left);
+			} else {
+				leftVal = left.toString();
 			}
 		}
 		if (right instanceof Column) {
 			Column col2 = (Column) right;
-			int i;
-			for (i=0; i<schema.length; i++) {
-				if (schema[i].getColumnName().equals(col2.getColumnName())) {
-					secondCol = i;
-					break;
-				}
+			int rightCol = getColumnID(col2);
+			if (dataType == Type.DATE) {
+				rightDateVal = tuple[rightCol].Date();
+			} else {
+				rightVal = tuple[rightCol].String();
 			}
-			if (schema[i].getColDataType().getDataType().equals("int")) {
-				if(tuple[firstCol].Double() < tuple[secondCol].Double()){
-					result = true;
-					return;
-				}
-			}
-			else {
-				if (tuple[firstCol].Date().before(tuple[secondCol].Date())) {
-					result = true;
-					return;
-				}
-			}
-
 		} else {
-			double rightVal = 0;
-			
-			if (right instanceof LongValue || right instanceof DoubleValue) {
-				rightVal = Double.parseDouble(right.toString());
-
-				if(tuple[firstCol].Double() < rightVal){
+			if (dataType == Type.DATE) {
+				rightDateVal = getDateVal(right);
+			} else {
+				rightVal = right.toString();
+			}
+		}
+		switch (dataType) {
+			case INT:
+				if (Integer.parseInt(leftVal) < Integer.parseInt(rightVal)) {
 					result = true;
 					return;
 				}
-			}
-			else {
-				try {
-					StringValue date = (StringValue)right;	
-					String dateVal = date.getValue();
-					if (tuple[firstCol].Date().before((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal)))) {
-						result = true;
-						return;
-					}
-				} catch (ParseException e) {
-					e.printStackTrace();
+				break;
+			case DOUBLE:
+				if (Double.parseDouble(leftVal) < Double.parseDouble(rightVal)) {
+					result = true;
+					return;
 				}
-			}
+				break;
+			case STRING:
+				break;
+			case DATE:
+				if (leftDateVal.before(rightDateVal)) {
+					result = true;
+					return;
+				}
+				break;
 		}
 		result = false;
 	}
-
+	
 	@Override
 	public void visit(MinorThanEquals arg0) {
-		Column col1 = (Column)arg0.getLeftExpression();
+		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		int firstCol = -1, secondCol = -1;
-		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col1.getColumnName())) {
-				firstCol = i;
-				break;
+		Type dataType = getDataType(left, right);
+		String leftVal = null, rightVal = null;
+		Date leftDateVal = null, rightDateVal = null;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			if (dataType == Type.DATE) {
+				leftDateVal = tuple[leftCol].Date();
+			} else {
+				leftVal = tuple[leftCol].String();
+			}
+		} else {
+			if (dataType == Type.DATE) {
+				leftDateVal = getDateVal(left);
+			} else {
+				leftVal = left.toString();
 			}
 		}
 		if (right instanceof Column) {
 			Column col2 = (Column) right;
-			int i;
-			for (i=0; i<schema.length; i++) {
-				if (schema[i].getColumnName().equals(col2.getColumnName())) {
-					secondCol = i;
-					break;
-				}
+			int rightCol = getColumnID(col2);
+			if (dataType == Type.DATE) {
+				rightDateVal = tuple[rightCol].Date();
+			} else {
+				rightVal = tuple[rightCol].String();
 			}
-			if (schema[i].getColDataType().getDataType().equals("int")) {
-				if(tuple[firstCol].Double() <= tuple[secondCol].Double()){
-					result = true;
-					return;
-				}
-			}
-			else {
-				if (!(tuple[firstCol].Date().after(tuple[secondCol].Date()))) {
-					result = true;
-					return;
-				}
-			}
-
 		} else {
-			double rightVal = 0;
-			
-			if (right instanceof LongValue || right instanceof DoubleValue) {
-				rightVal = Double.parseDouble(right.toString());
-
-				if(tuple[firstCol].Double() <= rightVal){
-					result = true;
-					return;
-				}
-			}
-			else {
-				try {
-					StringValue date = (StringValue)right;	
-					String dateVal = date.getValue();
-					if (!(tuple[firstCol].Date().after((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
-						result = true;
-						return;
-					}
-				} catch (ParseException e) {
-					e.printStackTrace();
-				}
+			if (dataType == Type.DATE) {
+				rightDateVal = getDateVal(right);
+			} else {
+				rightVal = right.toString();
 			}
 		}
-		result = false;		
+		switch (dataType) {
+			case INT:
+				if (Integer.parseInt(leftVal) <= Integer.parseInt(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case DOUBLE:
+				if (Double.parseDouble(leftVal) <= Double.parseDouble(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case STRING:
+				break;
+			case DATE:
+				if (!(leftDateVal.after(rightDateVal))) {
+					result = true;
+					return;
+				}
+				break;
+		}
+		result = false;
 	}
-
+	
 	@Override
 	public void visit(NotEqualsTo arg0) {
-		Column col1 = (Column)arg0.getLeftExpression();
+		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		int firstCol = -1, secondCol = -1;
-		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col1.getColumnName())) {
-				firstCol = i;
-				break;
+		Type dataType = getDataType(left, right);
+		String leftVal = null, rightVal = null;
+		Date leftDateVal = null, rightDateVal = null;
+		if (left instanceof Column) {
+			Column col1 = (Column) left;
+			int leftCol = getColumnID(col1);
+			if (dataType == Type.DATE) {
+				leftDateVal = tuple[leftCol].Date();
+			} else {
+				leftVal = tuple[leftCol].String();
+			}
+		} else {
+			if (dataType == Type.DATE) {
+				leftDateVal = getDateVal(left);
+			} else if (dataType == Type.STRING){
+				leftVal = ((StringValue)left).getValue();
+			} else {
+				leftVal = left.toString();
 			}
 		}
 		if (right instanceof Column) {
 			Column col2 = (Column) right;
-			int i;
-			for (i=0; i<schema.length; i++) {
-				if (schema[i].getColumnName().equals(col2.getColumnName())) {
-					secondCol = i;
-					break;
-				}
+			int rightCol = getColumnID(col2);
+			if (dataType == Type.DATE) {
+				rightDateVal = tuple[rightCol].Date();
+			} else {
+				rightVal = tuple[rightCol].String();
 			}
-			if (schema[i].getColDataType().getDataType().equals("int")) {
-				if(tuple[firstCol].Double() != tuple[secondCol].Double()){
-					result = true;
-					return;
-				}
-			}
-			else {
-				if (!(tuple[firstCol].Date().equals(tuple[secondCol].Date()))) {
-					result = true;
-					return;
-				}
-			}
-
 		} else {
-			double rightVal = 0;
-			
-			if (right instanceof LongValue || right instanceof DoubleValue) {
-				rightVal = Double.parseDouble(right.toString());
-
-				if(tuple[firstCol].Double() != rightVal){
-					result = true;
-					return;
-				}
-			}
-			else {
-				try {
-					StringValue date = (StringValue)right;	
-					String dateVal = date.getValue();
-					if (!(tuple[firstCol].Date().equals((new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(dateVal))))) {
-						result = true;
-						return;
-					}
-				} catch (ParseException e) {
-					e.printStackTrace();
-				}
+			if (dataType == Type.DATE) {
+				rightDateVal = getDateVal(right);
+			} else if (dataType == Type.STRING){
+				rightVal = ((StringValue)right).getValue();
+			} else {
+				rightVal = right.toString();
 			}
 		}
-		result = false;	
+		switch (dataType) {
+			case INT:
+				if (Integer.parseInt(leftVal) != Integer.parseInt(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case DOUBLE:
+				if (Double.parseDouble(leftVal) != Double.parseDouble(rightVal)) {
+					result = true;
+					return;
+				}
+				break;
+			case STRING:
+				if (!(leftVal.equals(rightVal))) {
+					result = true;
+					return;
+				}
+				break;
+			case DATE:
+				if (!(leftDateVal.equals(rightDateVal))) {
+					result = true;
+					return;
+				}
+				break;
+		}
+		result = false;
 	}
-
+	
 	@Override
 	public void visit(Column arg0) {
 		// TODO Auto-generated method stub

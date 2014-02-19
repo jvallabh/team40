@@ -68,6 +68,7 @@ public class ProjectionOperator implements Operator {
 					Evaluator eval = new Evaluator(schema, tuple);
 					if(exp != null){
 						exp.accept(eval);
+						// TODO Have to get the values based on the data-type
 						tupleList.add(new Datum(Integer.toString(eval.getIntValue())));
 					}
 				}

@@ -2,7 +2,7 @@ package edu.buffalo.cse562;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.sql.Date;
 import java.util.Locale;
 
 public class Datum {
@@ -38,7 +38,7 @@ public class Datum {
 	
 	public Date Date() {	
 		try {
-			return (new SimpleDateFormat("YYYY-MM-DD", Locale.ENGLISH).parse(element));
+			return new Date(new SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH).parse(element).getTime());
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
