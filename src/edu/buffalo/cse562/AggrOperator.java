@@ -30,6 +30,7 @@ public class AggrOperator implements Operator {
 	ColumnDefinition[] schema;
 	List<SelectItem> selectItems;
 	ArrayList<Integer> itemList = new ArrayList<>();
+	Datum[] result=null;
 	
 	public AggrOperator(Operator input, ColumnDefinition[] schema, List<SelectItem> selectItems) {
 		this.input = input;
@@ -48,7 +49,8 @@ public class AggrOperator implements Operator {
 	
 	@Override
 	public Datum[] readOneTuple() {
-		Datum[] result = input.readOneTuple(); 
+		if(result==null)
+		result = input.readOneTuple(); 
 		while(result!=null){
 		Datum[] tuple = input.readOneTuple();
 		if(tuple==null){
