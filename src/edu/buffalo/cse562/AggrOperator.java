@@ -94,7 +94,7 @@ result[i].element = Integer.toString((Integer.parseInt(result[i].toString()) + I
 	@Override
 	public ColumnDefinition[] getSchema() {
 		// TODO Auto-generated method stub
-		return null;
+		return schema;
 	}
 
 }
