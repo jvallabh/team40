@@ -4,7 +4,9 @@
 package edu.buffalo.cse562;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
@@ -25,6 +27,8 @@ public class GroupByOperator implements Operator {
 	int grpByColumnIndex=-1;
 	int currHashKeyIndex = 0;
 	int currHashValueIndex = 0;
+	
+	int currReturnedGrpIndex = -1;
 	
 	GroupByOperator(Operator input, Column grpByColumn, ColumnDefinition[] schema){
 		this.input=input;
@@ -47,6 +51,35 @@ public class GroupByOperator implements Operator {
 				break;
 			}
 		}
+		//Following code is to handle the scenarios, where we need to group by multiple columns
+		if(input instanceof GroupByOperator){
+			Entry<String, ArrayList<Datum[]>> currGrp = null;
+			while((currGrp = ((GroupByOperator) input).readOneGroup()) != null){
+				String grpKey = currGrp.getKey();
+				ArrayList<Datum[]> grpList = currGrp.getValue();
+				LinkedHashMap<String, ArrayList<Datum[]>> tempGroupedMap = new LinkedHashMap<>();
+				for(int i=0;i<grpList.size();i++){
+					Datum[] currTuple = grpList.get(i);
+					String tempGrpKey = currTuple[grpByColumnIndex].String();
+					if(tempGroupedMap.containsKey(tempGrpKey)){
+						tempGroupedMap.get(tempGrpKey).add(currTuple);
+					}
+					else{
+						ArrayList<Datum[]> datumList = new ArrayList<>();
+						datumList.add(currTuple);
+						tempGroupedMap.put(tempGrpKey, datumList);
+					}
+				}
+				ArrayList<Datum[]> finalGroupedList = new ArrayList<>();
+				Iterator<Entry<String, ArrayList<Datum[]>>> iterator = tempGroupedMap.entrySet().iterator();
+				while(iterator.hasNext()){
+					finalGroupedList.addAll(iterator.next().getValue());
+				}
+				groupedMap.put(grpKey, finalGroupedList);				
+			}
+		}
+		
+		//When we are doing the group by for the first time
 		Datum[] currTuple = null;
 		while((currTuple = input.readOneTuple()) != null){
 			if(groupedMap.containsKey(currTuple[grpByColumnIndex].String())){
@@ -57,11 +90,7 @@ public class GroupByOperator implements Operator {
 				datumList.add(currTuple);
 				groupedMap.put(currTuple[grpByColumnIndex].String(), datumList);
 			}
-		}
-		//System.out.println("Printing hashMap");
-		//System.out.println(groupedMap);
-		//System.out.println(groupedMap.size());
-		
+		}		
 	}
 
 	@Override
@@ -92,6 +121,20 @@ public class GroupByOperator implements Operator {
 	public ColumnDefinition[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
+	}
+	
+	public Entry<String, ArrayList<Datum[]>> readOneGroup(){
+		currReturnedGrpIndex++;
+		if(currReturnedGrpIndex<groupedMap.size()){
+			Object[] hashMapArray = groupedMap.entrySet().toArray();
+			//Object[] hashMapArray = groupedMap.values().toArray();
+			return (Entry<String, ArrayList<Datum[]>>) hashMapArray[currReturnedGrpIndex];
+		}
+		return null;
+	}
+	
+	public void resetReturnGrp() {
+		currReturnedGrpIndex = -1;
 	}
 
 }
