@@ -12,6 +12,8 @@ import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.FromItemVisitor;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectBody;
 import net.sf.jsqlparser.statement.select.SubJoin;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
@@ -46,9 +48,13 @@ public class FromScanner implements FromItemVisitor {
 	}
 
 	@Override
-	public void visit(SubSelect arg0) {
+	public void visit(SubSelect subSelect) {
 		//System.out.println("Visit method with SubSelect is called");
-		
+		SelectBody select = subSelect.getSelectBody();
+		if(select instanceof PlainSelect){
+			PlainSelect pselect = (PlainSelect)select;
+			source = SelectProcessor.processPlainSelect(pselect);
+		}		
 	}
 
 	@Override
