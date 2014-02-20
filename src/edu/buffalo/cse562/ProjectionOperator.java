@@ -74,6 +74,6 @@ public class ProjectionOperator implements Operator {
 	@Override
 	public ColumnDefinition[] getSchema() {
 		// TODO Auto-generated method stub
-		return null;
+		return schema;
 	}
 }
