@@ -4,11 +4,8 @@
 package edu.buffalo.cse562;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
-import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.AllColumns;
@@ -55,23 +52,14 @@ public class ProjectionOperator implements Operator {
 		if (selectItems.get(0) instanceof AllColumns)
 			return tuple;
 		else {			
-			Column col;
 			SelectExpressionItem selectExp;
 			Expression exp = null;
 			for (int j=0; j<selectItems.size(); j++) {
 				selectExp = (SelectExpressionItem)selectItems.get(j);
 				exp = selectExp.getExpression();
-				if (exp instanceof Column) {
-					col = (Column)exp;
-					tupleList.add(tuple[getColumnID(col)]);
-				} else if (exp instanceof BinaryExpression) {
-					Evaluator eval = new Evaluator(schema, tuple);
-					if(exp != null){
-						exp.accept(eval);
-						// TODO Have to get the values based on the data-type
-						tupleList.add(new Datum(eval.getValue()));
-					}
-				}
+				Evaluator eval = new Evaluator(schema, tuple);
+				exp.accept(eval);
+				tupleList.add(new Datum(eval.getValue()));
 			}
 			newTuple = tupleList.toArray(new Datum[0]);
 			return newTuple;
@@ -88,5 +76,4 @@ public class ProjectionOperator implements Operator {
 		// TODO Auto-generated method stub
 		return null;
 	}
-
 }

@@ -209,7 +209,6 @@ public class Evaluator implements ExpressionVisitor {
 		return Type.STRING;
 	}
 	
-	//TODO Have to handle if either the right or left is a Binary Expression instead of just a value
 	@Override
 	public void visit(Addition arg0) {
 		Expression left = arg0.getLeftExpression();
