@@ -54,7 +54,7 @@ public class Evaluator implements ExpressionVisitor {
 	ColumnDefinition[] schema;
 	Datum[] tuple;
 	boolean result;
-	double value;
+	String value;
 	
 	public Evaluator(ColumnDefinition[] schema, Datum[] tuple) {
 		this.schema = schema;
@@ -69,12 +69,16 @@ public class Evaluator implements ExpressionVisitor {
 		return result;
 	}
 	
-	public double getValue() {
+	/*public double getDoubleValue() {
 		return value;
 	}
 	
 	public int getIntValue() {
 		return (int)value;
+	}*/
+	
+	public String getValue() {
+		return value;
 	}
 	
 	@Override
@@ -144,6 +148,9 @@ public class Evaluator implements ExpressionVisitor {
 	}
 
 	public Type getNumType(Expression expr) {
+		if (expr instanceof BinaryExpression) {
+			return getNumType(((BinaryExpression) expr).getLeftExpression());
+		}
 		if (expr instanceof Column) {
 			Column col = (Column) expr;
 			int colID;
@@ -174,6 +181,13 @@ public class Evaluator implements ExpressionVisitor {
 			expr = left;
 		} else {
 			expr = right;
+		}
+		if (right instanceof BinaryExpression) {
+			if (left instanceof BinaryExpression) {
+				return getNumType(((BinaryExpression)left).getLeftExpression());
+			} else {
+				expr = left;
+			}
 		}
 		if (expr instanceof Column) {
 			Column col = (Column) expr;
@@ -218,6 +232,9 @@ public class Evaluator implements ExpressionVisitor {
 			Column col1 = (Column) left;
 			int leftCol = getColumnID(col1);
 			leftVal = tuple[leftCol].String();
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			leftVal = left.toString();
 		}
@@ -225,15 +242,18 @@ public class Evaluator implements ExpressionVisitor {
 			Column col2 = (Column) right;
 			int rightCol = getColumnID(col2);
 			rightVal = tuple[rightCol].String();
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			rightVal = right.toString();
 		}
 		switch (dataType) {
 			case INT:
-				value = Integer.parseInt(leftVal) + Integer.parseInt(rightVal);
+				value = ((Integer)(Integer.parseInt(leftVal) + Integer.parseInt(rightVal))).toString();
 				break;
 			case DOUBLE:
-				value = Double.parseDouble(leftVal) + Double.parseDouble(rightVal);
+				value = ((Double)(Double.parseDouble(leftVal) + Double.parseDouble(rightVal))).toString();
 				break;
 		}
 	}
@@ -248,6 +268,9 @@ public class Evaluator implements ExpressionVisitor {
 			Column col1 = (Column) left;
 			int leftCol = getColumnID(col1);
 			leftVal = tuple[leftCol].String();
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			leftVal = left.toString();
 		}
@@ -255,15 +278,18 @@ public class Evaluator implements ExpressionVisitor {
 			Column col2 = (Column) right;
 			int rightCol = getColumnID(col2);
 			rightVal = tuple[rightCol].String();
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			rightVal = right.toString();
 		}
 		switch (dataType) {
 			case INT:
-				value = Integer.parseInt(leftVal)/Integer.parseInt(rightVal);
+				value = ((Integer)(Integer.parseInt(leftVal)/Integer.parseInt(rightVal))).toString();
 				break;
 			case DOUBLE:
-				value = Double.parseDouble(leftVal)/Double.parseDouble(rightVal);
+				value = ((Double)(Double.parseDouble(leftVal)/Double.parseDouble(rightVal))).toString();
 				break;
 		}
 	}
@@ -278,6 +304,9 @@ public class Evaluator implements ExpressionVisitor {
 			Column col1 = (Column) left;
 			int leftCol = getColumnID(col1);
 			leftVal = tuple[leftCol].String();
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			leftVal = left.toString();
 		}
@@ -285,15 +314,18 @@ public class Evaluator implements ExpressionVisitor {
 			Column col2 = (Column) right;
 			int rightCol = getColumnID(col2);
 			rightVal = tuple[rightCol].String();
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			rightVal = right.toString();
 		}
 		switch (dataType) {
 			case INT:
-				value = Integer.parseInt(leftVal)*Integer.parseInt(rightVal);
+				value = ((Integer)(Integer.parseInt(leftVal) * Integer.parseInt(rightVal))).toString();
 				break;
 			case DOUBLE:
-				value = Double.parseDouble(leftVal)*Double.parseDouble(rightVal);
+				value = ((Double)(Double.parseDouble(leftVal) * Double.parseDouble(rightVal))).toString();
 				break;
 		}
 	}
@@ -308,6 +340,9 @@ public class Evaluator implements ExpressionVisitor {
 			Column col1 = (Column) left;
 			int leftCol = getColumnID(col1);
 			leftVal = tuple[leftCol].String();
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			leftVal = left.toString();
 		}
@@ -315,15 +350,18 @@ public class Evaluator implements ExpressionVisitor {
 			Column col2 = (Column) right;
 			int rightCol = getColumnID(col2);
 			rightVal = tuple[rightCol].String();
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			rightVal = right.toString();
 		}
 		switch (dataType) {
 			case INT:
-				value = Integer.parseInt(leftVal) - Integer.parseInt(rightVal);
+				value = ((Integer)(Integer.parseInt(leftVal) - Integer.parseInt(rightVal))).toString();
 				break;
 			case DOUBLE:
-				value = Double.parseDouble(leftVal) - Double.parseDouble(rightVal);
+				value = ((Double)(Double.parseDouble(leftVal) - Double.parseDouble(rightVal))).toString();
 				break;
 		}
 	}
@@ -397,6 +435,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				leftVal = tuple[leftCol].String();
 			}
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				leftDateVal = getDateVal(left);
@@ -414,6 +455,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				rightVal = tuple[rightCol].String();
 			}
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				rightDateVal = getDateVal(right);
@@ -467,6 +511,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				leftVal = tuple[leftCol].String();
 			}
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				leftDateVal = getDateVal(left);
@@ -482,6 +529,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				rightVal = tuple[rightCol].String();
 			}
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				rightDateVal = getDateVal(right);
@@ -529,6 +579,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				leftVal = tuple[leftCol].String();
 			}
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				leftDateVal = getDateVal(left);
@@ -544,6 +597,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				rightVal = tuple[rightCol].String();
 			}
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				rightDateVal = getDateVal(right);
@@ -609,6 +665,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				leftVal = tuple[leftCol].String();
 			}
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				leftDateVal = getDateVal(left);
@@ -624,6 +683,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				rightVal = tuple[rightCol].String();
 			}
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				rightDateVal = getDateVal(right);
@@ -671,6 +733,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				leftVal = tuple[leftCol].String();
 			}
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				leftDateVal = getDateVal(left);
@@ -686,6 +751,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				rightVal = tuple[rightCol].String();
 			}
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				rightDateVal = getDateVal(right);
@@ -733,6 +801,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				leftVal = tuple[leftCol].String();
 			}
+		} else if(left instanceof BinaryExpression) {
+			left.accept(this);
+			leftVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				leftDateVal = getDateVal(left);
@@ -750,6 +821,9 @@ public class Evaluator implements ExpressionVisitor {
 			} else {
 				rightVal = tuple[rightCol].String();
 			}
+		} else if(right instanceof BinaryExpression) {
+			right.accept(this);
+			rightVal = this.getValue();
 		} else {
 			if (dataType == Type.DATE) {
 				rightDateVal = getDateVal(right);
