@@ -3,6 +3,7 @@ package edu.buffalo.cse562;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.sql.Date;
+import java.util.Iterator;
 import java.util.Locale;
 
 import net.sf.jsqlparser.expression.AllComparisonExpression;
@@ -36,6 +37,7 @@ import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.Between;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.ExistsExpression;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.InExpression;
@@ -81,7 +83,22 @@ public class Evaluator implements ExpressionVisitor {
 
 	@Override
 	public void visit(Function arg0) {
-		// TODO Auto-generated method stub
+		if(arg0 instanceof Function) {
+			Function aggFunc = (Function) arg0;
+			if(arg0.getName().equals("COUNT")){	
+				value = "1";
+				return;
+			}
+			ExpressionList expList = aggFunc.getParameters();
+			Column expCol = null;
+			for (Iterator iter = expList.getExpressions().iterator(); iter.hasNext();) {
+				 ((Expression)iter.next()).accept(this);
+				 break;
+			}
+			
+			return;
+			
+		}
 		
 	}
 

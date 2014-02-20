@@ -66,7 +66,8 @@ public class SelectProcessor {
 		
 		Operator inputToProject = finalGrpByOperator!=null?finalGrpByOperator:selectOperator;
 		projectOperator = new ProjectionOperator(inputToProject,inputToProject.getSchema(),selectItems);
-		return (Operator) projectOperator;		
+		AggrOperator aggrOperator = new AggrOperator(projectOperator,projectOperator.getSchema(),selectItems);
+		return (Operator) aggrOperator;		
   }	
 	
 }
