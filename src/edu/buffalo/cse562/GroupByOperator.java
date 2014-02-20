@@ -37,7 +37,7 @@ public class GroupByOperator implements Operator {
 		//This is to get the index of our column
 		ColumnDefinition columnDef = null;
 		if(grpByColumn.getTable().getName() != null){
-			columnDef = Main.getColumnDefinitionOfColumn(grpByColumn);
+			columnDef = Util.getColumnDefinitionOfColumn(grpByColumn);
 		}
 		for(int i=0;i<schema.length;i++){
 			//System.out.println("schema[i] is: "+schema[i]+" grpByColumn is: "+grpByColumn);
