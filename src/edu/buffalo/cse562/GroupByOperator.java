@@ -23,14 +23,14 @@ public class GroupByOperator implements Operator {
 	Operator input = null;
 	Column grpByColumn;
 	LinkedHashMap<String, ArrayList<Datum[]>> groupedMap = new LinkedHashMap<>();
-	ColumnDefinition[] schema;
+	ColumnInfo[] schema;
 	int grpByColumnIndex=-1;
 	int currHashKeyIndex = 0;
 	int currHashValueIndex = 0;
 	
 	int currReturnedGrpIndex = -1;
 	
-	GroupByOperator(Operator input, Column grpByColumn, ColumnDefinition[] schema){
+	GroupByOperator(Operator input, Column grpByColumn, ColumnInfo[] schema){
 		this.input=input;
 		this.grpByColumn=grpByColumn;
 		this.schema=schema;
@@ -45,7 +45,7 @@ public class GroupByOperator implements Operator {
 		}
 		for(int i=0;i<schema.length;i++){
 			//System.out.println("schema[i] is: "+schema[i]+" grpByColumn is: "+grpByColumn);
-			boolean testCondition = columnDef != null?schema[i]==columnDef:schema[i].getColumnName().equals(grpByColumn.getColumnName());
+			boolean testCondition = columnDef != null?schema[i].colDef==columnDef:schema[i].colDef.getColumnName().equals(grpByColumn.getColumnName());
 			if(testCondition){
 				grpByColumnIndex = i;
 				break;
@@ -99,6 +99,7 @@ public class GroupByOperator implements Operator {
 			return null;
 		}
 		Object[] hashMapArray = groupedMap.values().toArray();
+		@SuppressWarnings("unchecked")
 		ArrayList<Datum[]> currGroupedList = (ArrayList<Datum[]>) hashMapArray[currHashKeyIndex];
 		Datum[] currTuple=currGroupedList.get(currHashValueIndex);
 		currHashValueIndex++;
@@ -118,11 +119,12 @@ public class GroupByOperator implements Operator {
 	}
 
 	@Override
-	public ColumnDefinition[] getSchema() {
+	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public Entry<String, ArrayList<Datum[]>> readOneGroup(){
 		currReturnedGrpIndex++;
 		if(currReturnedGrpIndex<groupedMap.size()){

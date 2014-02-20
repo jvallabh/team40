@@ -7,7 +7,6 @@ import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 
-import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
@@ -28,7 +27,7 @@ import net.sf.jsqlparser.statement.select.SubSelect;
 public class FromScanner implements FromItemVisitor {
 	File basePath;
 	HashMap<String, CreateTable> tables;
-	public ColumnDefinition[] schema = null;
+	public ColumnInfo[] schema = null;
 	public Operator source = null;
 	
 	public FromScanner(File basePath, HashMap<String, CreateTable> tables){
@@ -40,9 +39,14 @@ public class FromScanner implements FromItemVisitor {
 	public void visit(Table tableName) {
 		//System.out.println("Visit method with tableName is called");
 		CreateTable table = tables.get(tableName.getName());
-		List colDefs = table.getColumnDefinitions();
-		schema = new ColumnDefinition[colDefs.size()];
-		colDefs.toArray(schema);
+		List<?> colDefs = table.getColumnDefinitions();
+		ColumnDefinition[] colDefschema = new ColumnDefinition[colDefs.size()];
+		schema = new ColumnInfo[colDefs.size()];
+		colDefs.toArray(colDefschema);
+		for(int i=0;i<colDefschema.length;i++){
+			String tableNameEffective=tableName.getAlias() != null?tableName.getAlias():tableName.getName();
+			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective);
+		}
 		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"), schema);
 		
 	}

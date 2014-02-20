@@ -27,12 +27,12 @@ import net.sf.jsqlparser.schema.Column;
  */
 public class AggrOperator implements Operator {
 	Operator input;
-	ColumnDefinition[] schema;
+	ColumnInfo[] schema;
 	List<SelectItem> selectItems;
 	ArrayList<Integer> itemList = new ArrayList<>();
 	Datum[] result=null;
 	
-	public AggrOperator(Operator input, ColumnDefinition[] schema, List<SelectItem> selectItems) {
+	public AggrOperator(Operator input, ColumnInfo[] schema, List<SelectItem> selectItems) {
 		this.input = input;
 		this.schema = schema;
 		this.selectItems = selectItems;
@@ -40,7 +40,7 @@ public class AggrOperator implements Operator {
 	
 	public int getColumnID(Column col) {
 		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col.getColumnName())) {
+			if (schema[i].colDef.getColumnName().equals(col.getColumnName())) {
 				return i;
 			}
 		}
@@ -80,6 +80,8 @@ result[i].element = Integer.toString((Integer.parseInt(result[i].toString()) + I
 	}
 	public static int[] getSelectItemType(List<SelectItem> selectItems ){
 		int[] selectItemType = new int[selectItems.size()];
+		if (selectItems.get(0) instanceof AllColumns)
+			return selectItemType;
 		for (int j=0; j<selectItems.size(); j++) {
 			SelectExpressionItem selectExp = (SelectExpressionItem)selectItems.get(j);
 			Expression exp = selectExp.getExpression();
@@ -92,7 +94,7 @@ result[i].element = Integer.toString((Integer.parseInt(result[i].toString()) + I
 		return selectItemType;
 	}
 	@Override
-	public ColumnDefinition[] getSchema() {
+	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
 	}

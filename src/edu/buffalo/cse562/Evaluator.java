@@ -48,17 +48,16 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 public class Evaluator implements ExpressionVisitor {
 
-	ColumnDefinition[] schema;
+	ColumnInfo[] schema;
 	Datum[] tuple;
 	boolean result;
 	String value;
 	
-	public Evaluator(ColumnDefinition[] schema, Datum[] tuple) {
+	public Evaluator(ColumnInfo[] schema, Datum[] tuple) {
 		this.schema = schema;
 		this.tuple = tuple;
 	}
@@ -161,14 +160,14 @@ public class Evaluator implements ExpressionVisitor {
 			int colID;
 			// Gets the corresponding columnID from the schema
 			for (colID=0; colID<schema.length; colID++) {
-				if (schema[colID].getColumnName().equals(col.getColumnName())) {
+				if (schema[colID].colDef.getColumnName().equals(col.getColumnName())) {
 					break;
 				}
 			}
 			// Sets the data-type of the element in the column
-			if (schema[colID].getColDataType().getDataType().equals("int")) {
+			if (schema[colID].colDef.getColDataType().getDataType().equals("int")) {
 				return Type.INT;
-			} else if (schema[colID].getColDataType().getDataType().equals("double")) {
+			} else if (schema[colID].colDef.getColDataType().getDataType().equals("double")) {
 				return Type.DOUBLE;
 			} 
 			// Sets the data-type of the element
@@ -199,18 +198,18 @@ public class Evaluator implements ExpressionVisitor {
 			int colID;
 			// Gets the corresponding columnID from the schema
 			for (colID=0; colID<schema.length; colID++) {
-				if (schema[colID].getColumnName().equals(col.getColumnName())) {
+				if (schema[colID].colDef.getColumnName().equals(col.getColumnName())) {
 					break;
 				}
 			}
 			// Sets the data-type of the element in the column
-			if (schema[colID].getColDataType().getDataType().equals("int")) {
+			if (schema[colID].colDef.getColDataType().getDataType().equals("int")) {
 				return Type.INT;
-			} else if (schema[colID].getColDataType().getDataType().equals("double")) {
+			} else if (schema[colID].colDef.getColDataType().getDataType().equals("double")) {
 				return Type.DOUBLE;
-			} else if (schema[colID].getColDataType().getDataType().equals("string")) {
+			} else if (schema[colID].colDef.getColDataType().getDataType().equals("string")) {
 				return Type.STRING;
-			} else if (schema[colID].getColDataType().getDataType().equals("date")) {
+			} else if (schema[colID].colDef.getColDataType().getDataType().equals("date")) {
 				return Type.DATE;
 			}
 			// Sets the data-type of the element
@@ -351,7 +350,7 @@ public class Evaluator implements ExpressionVisitor {
 	
 	public int getColumnID(Column col) {
 		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col.getColumnName())) {
+			if (schema[i].colDef.getColumnName().equals(col.getColumnName())) {
 				return i;
 			}
 		}

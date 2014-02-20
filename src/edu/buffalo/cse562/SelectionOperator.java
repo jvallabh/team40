@@ -4,8 +4,6 @@
 package edu.buffalo.cse562;
 
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
  * @author The Usual Suspects
@@ -17,10 +15,10 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
  */
 public class SelectionOperator implements Operator {
 	Operator input;
-	ColumnDefinition[] schema;
+	ColumnInfo[] schema;
 	Expression condition;
 	
-	public SelectionOperator(Operator input, ColumnDefinition[] schema, Expression condition){
+	public SelectionOperator(Operator input, ColumnInfo[] schema, Expression condition){
 		this.input = input;
 		this.condition = condition;
 		this.schema = schema;
@@ -50,7 +48,7 @@ public class SelectionOperator implements Operator {
 	}
 
 	@Override
-	public ColumnDefinition[] getSchema() {
+	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
 	}

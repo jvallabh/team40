@@ -76,6 +76,7 @@ public class Util {
 		return finalGrpByOperator;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static ColumnDefinition getColumnDefinitionOfColumn(Column column){
 		//System.out.println("Curr table name is: "+column.getTable().getName()+" "+column.getTable().getAlias()+" "+column.getTable().getSchemaName()+" "+column.getTable().getWholeTableName());
 		CreateTable currTable = Main.tables.get(column.getTable().getName());

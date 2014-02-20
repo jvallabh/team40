@@ -8,8 +8,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
-
 /**
  * @author The Usual Suspects
  * @Name----------------------EmailAddress
@@ -22,9 +20,9 @@ public class ScanOperator implements Operator {
 
 	BufferedReader input;
 	File f;
-	ColumnDefinition[] schema;
+	ColumnInfo[] schema;
 	
-	public ScanOperator(File f, ColumnDefinition[] schema) {
+	public ScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
 		this.schema = schema;
 		reset();
@@ -61,7 +59,7 @@ public class ScanOperator implements Operator {
 	}
 
 	@Override
-	public ColumnDefinition[] getSchema() {
+	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
 	}

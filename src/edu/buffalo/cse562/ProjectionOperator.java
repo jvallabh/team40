@@ -30,12 +30,12 @@ import net.sf.jsqlparser.schema.Column;
  */
 public class ProjectionOperator implements Operator {
 	Operator input;
-	ColumnDefinition[] schema;
+	ColumnInfo[] schema;
 	List<SelectItem> selectItems;
 	ArrayList<Integer> itemList = new ArrayList<>();
-	ColumnDefinition[] finalSchema;
+	ColumnInfo[] finalSchema;
 	
-	public ProjectionOperator(Operator input, ColumnDefinition[] schema, List<SelectItem> selectItems) {
+	public ProjectionOperator(Operator input, ColumnInfo[] schema, List<SelectItem> selectItems) {
 		this.input = input;
 		this.schema = schema;
 		this.selectItems = selectItems;
@@ -44,7 +44,7 @@ public class ProjectionOperator implements Operator {
 	
 	public int getColumnID(Column col) {
 		for (int i=0; i<schema.length; i++) {
-			if (schema[i].getColumnName().equals(col.getColumnName())) {
+			if (schema[i].colDef.getColumnName().equals(col.getColumnName())) {
 				return i;
 			}
 		}
@@ -64,25 +64,34 @@ public class ProjectionOperator implements Operator {
 		}
 		else if (expr instanceof Column) {
 			Column col = (Column) expr;
-			return (schema[getColumnID(col)].getColDataType());
+			return (schema[getColumnID(col)].colDef.getColDataType());
 		}
 		return null;
 	}
 	
-	public ColumnDefinition[] changeSchema(List selectItems) {
-		ColumnDefinition[] schema = new ColumnDefinition[selectItems.size()];
+	public String getTableName(Expression expr) {
+		if (expr instanceof Column) {
+			return ((Column) expr).getTable().getName();
+		} else 
+			return new String("dummy");
+	}
+	
+	public ColumnInfo[] changeSchema(List selectItems) {
+		if (selectItems.get(0) instanceof AllColumns)
+		return schema;
+		ColumnInfo[] schema = new ColumnInfo[selectItems.size()];
 		SelectExpressionItem exp;
 		for (int j=0; j<selectItems.size(); j++) {
+			ColumnDefinition colDef = new ColumnDefinition();
 			exp = (SelectExpressionItem)selectItems.get(j);
 			if(exp.getAlias()!=null) {
-				schema[j] = new ColumnDefinition();
-				schema[j].setColumnName(exp.getAlias());
+				colDef.setColumnName(exp.getAlias());
 			}
 			else {
-				schema[j] = new ColumnDefinition();
-				schema[j].setColumnName(exp.toString());
+				colDef.setColumnName(exp.toString());
 			}
-			schema[j].setColDataType(getNumType(exp.getExpression()));
+			colDef.setColDataType(getNumType(exp.getExpression()));
+			schema[j] = new ColumnInfo(colDef, getTableName(exp.getExpression()));
 		}
 		
 		return schema;
@@ -118,7 +127,7 @@ public class ProjectionOperator implements Operator {
 	}
 
 	@Override
-	public ColumnDefinition[] getSchema() {
+	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return finalSchema;
 	}

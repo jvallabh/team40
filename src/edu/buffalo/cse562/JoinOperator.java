@@ -4,9 +4,6 @@
 package edu.buffalo.cse562;
 
 import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
-import java.util.*;
 
 /**
  * @author The Usual Suspects
@@ -19,7 +16,7 @@ import java.util.*;
 public class JoinOperator implements Operator {
 	Operator input1;
 	Operator input2;
-	ColumnDefinition[] schema;
+	ColumnInfo[] schema;
 	Expression condition;
 	Datum[] tuple1 =null;
 	Datum[] tuple2 =null;
@@ -79,10 +76,10 @@ public class JoinOperator implements Operator {
 	}
 	
 	
-	public ColumnDefinition[] getSchema(ColumnDefinition[] schema1, ColumnDefinition[] schema2){
+	public ColumnInfo[] getSchema(ColumnInfo[] schema1, ColumnInfo[] schema2){
 	    //System.out.println("schema1 length is: "+schema1.length);
 		int len = schema1.length + schema2.length;
-		schema = new ColumnDefinition[len];
+		schema = new ColumnInfo[len];
 		for(int i=0;i< len ; i++  )
 		{
 			if(i<schema1.length)
@@ -102,7 +99,7 @@ public class JoinOperator implements Operator {
 	}
 
 	@Override
-	public ColumnDefinition[] getSchema() {
+	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
 	}

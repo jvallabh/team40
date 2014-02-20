@@ -3,6 +3,7 @@
  */
 package edu.buffalo.cse562;
 
+import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
  * @author The Usual Suspects
@@ -12,11 +13,12 @@ package edu.buffalo.cse562;
  * Saket Adusumilli-----------saketadu@buffalo.edu
  * Anil Nalamalapu------------anilkuma@buffalo.edu
  */
-public interface Operator {
-	
-	public Datum[] readOneTuple();
-	
-	public void reset();
-	
-	public ColumnInfo[] getSchema();
+public class ColumnInfo {
+	ColumnDefinition colDef;
+	String tableName;
+	ColumnInfo(ColumnDefinition colDef, String tableName){
+		this.colDef=colDef;
+		this.tableName=tableName;
+	}
+
 }
