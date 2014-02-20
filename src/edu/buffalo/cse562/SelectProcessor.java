@@ -60,13 +60,14 @@ public class SelectProcessor {
 			selectOperator = new SelectionOperator(firstTableOperator, firstTableOperator.getSchema(), selectCondition);
 		}
 		
-		if(hasGroupBy){
-			finalGrpByOperator = (GroupByOperator) Util.getGroupByOperator(selectOperator, groupByColumns);
-		}
+		projectOperator = new ProjectionOperator(selectOperator,selectOperator.getSchema(),selectItems);
 		
-		Operator inputToProject = finalGrpByOperator!=null?finalGrpByOperator:selectOperator;
-		projectOperator = new ProjectionOperator(inputToProject,inputToProject.getSchema(),selectItems);
-		AggrOperator aggrOperator = new AggrOperator(projectOperator,projectOperator.getSchema(),selectItems);
+		if(hasGroupBy){
+			finalGrpByOperator = (GroupByOperator) Util.getGroupByOperator(projectOperator, groupByColumns);
+		}
+		Operator intputToAggr = finalGrpByOperator!=null?finalGrpByOperator:projectOperator;
+
+		AggrOperator aggrOperator = new AggrOperator(intputToAggr,intputToAggr.getSchema(),selectItems);
 		return (Operator) aggrOperator;		
   }	
 	

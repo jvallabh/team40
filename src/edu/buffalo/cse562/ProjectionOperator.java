@@ -12,6 +12,7 @@ import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.statement.create.table.ColDataType;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.AllColumns;
@@ -51,6 +52,9 @@ public class ProjectionOperator implements Operator {
 	}
 	
 	public ColDataType getNumType(Expression expr) {
+		if (expr instanceof Parenthesis) {
+			return getNumType(((Parenthesis) expr).getExpression());
+		}
 		if (expr instanceof BinaryExpression) {
 			ColDataType colDataType = getNumType(((BinaryExpression) expr).getLeftExpression());
 			if (colDataType == null) {
