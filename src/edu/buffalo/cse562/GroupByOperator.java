@@ -9,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
 import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 
 /**
  * @author The Usual Suspects
@@ -39,17 +38,24 @@ public class GroupByOperator implements Operator {
 	
 	private void doGroupBy(){
 		//This is to get the index of our column
-		ColumnDefinition columnDef = null;
 		if(grpByColumn.getTable().getName() != null){
-			columnDef = Util.getColumnDefinitionOfColumn(grpByColumn);
-		}
-		for(int i=0;i<schema.length;i++){
-			//System.out.println("schema[i] is: "+schema[i]+" grpByColumn is: "+grpByColumn);
-			boolean testCondition = columnDef != null?schema[i].colDef==columnDef:schema[i].colDef.getColumnName().equals(grpByColumn.getColumnName());
-			if(testCondition){
-				grpByColumnIndex = i;
-				break;
+			String grpByColumnTable = grpByColumn.getTable().getName();
+			String columnName = grpByColumn.getColumnName();
+			for(int i=0;i<schema.length;i++){
+				if(schema[i].tableName.equalsIgnoreCase(grpByColumnTable) && schema[i].colDef.getColumnName().equalsIgnoreCase(columnName)){
+					grpByColumnIndex = i;
+					break;
+				}
 			}
+			//columnDef = Util.getColumnDefinitionOfColumn(grpByColumn);
+		}
+		else{
+			for(int i=0;i<schema.length;i++){
+				if(schema[i].colDef.getColumnName().equalsIgnoreCase(grpByColumn.getColumnName())){
+					grpByColumnIndex = i;
+					break;
+				}
+			}			
 		}
 		//Following code is to handle the scenarios, where we need to group by multiple columns
 		if(input instanceof GroupByOperator){
