@@ -38,7 +38,7 @@ public class AggrOperator implements Operator {
 		this.input = input;
 		this.schema = schema;
 		this.selectItems = selectItems;
-		this.selectItemType= getSelectItemType(selectItems);
+		this.selectItemType= getSelectItemType(schema);
 	}
 	
 	public int getColumnID(Column col) {
@@ -73,6 +73,7 @@ public class AggrOperator implements Operator {
 			}
 			else{
 				getUpdate(tuple);
+				break;
 
 			}
 		  }		
@@ -118,30 +119,14 @@ public class AggrOperator implements Operator {
 		input.reset();
 	}
 	
-	public static int[] getSelectItemType(List<SelectItem> selectItems ){
-		int[] selectItemType = new int[selectItems.size()];
-		if (selectItems.get(0) instanceof AllColumns)
-			return selectItemType;
-		for (int j=0; j<selectItems.size(); j++) {
-			SelectExpressionItem selectExp = (SelectExpressionItem)selectItems.get(j);
-			Expression exp = selectExp.getExpression();
-			if ( exp instanceof Function){
-			Function f= (Function)exp;	
-			if(f.getName().toString().equalsIgnoreCase("SUM"))
-				selectItemType[j] =sum;
-			if(f.getName().toString().equalsIgnoreCase("MIN"))
-				selectItemType[j] =min;
-			if(f.getName().toString().equalsIgnoreCase("MAX"))
-				selectItemType[j] =max;
-			if(f.getName().toString().equalsIgnoreCase("AVG"))
-				selectItemType[j] =avg;
-			if(f.getName().toString().equalsIgnoreCase("COUNT"))
-				selectItemType[j] =count;
+	public static int[] getSelectItemType( ColumnInfo[] schema ){
+		int[] selectItemType = new int[schema.length];
+		int i=0;
+			for (ColumnInfo a: schema) {
+				selectItemType[i++]=a.functionType;
 			}
-			else
-				selectItemType[j] =0;
 			
-		}
+			
 		return selectItemType;
 	}
 	@Override
