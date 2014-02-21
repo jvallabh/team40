@@ -47,7 +47,7 @@ public class ProjectionOperator implements Operator {
 	}
 	
 	public int getColumnID(Column col) {
-		if(col.getTable()!=null) {
+		if(col.getTable().getName()!=null) {
 			for (int i=0; i<schema.length; i++) {
 				if (schema[i].colDef.getColumnName().equals(col.getColumnName())&&schema[i].tableName.equals(col.getTable().toString())) {
 					return i;
