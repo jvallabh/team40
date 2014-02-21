@@ -87,10 +87,10 @@ public class AggrOperator implements Operator {
 		for(int i=0; i<tuple.length;i++)
 		{
 			if(selectItemType[i]==avg)
-			result[i].element = Integer.toString(Integer.parseInt(result[i].toString()) /resultCount);			
+			tuple[i].element = Integer.toString(Integer.parseInt(tuple[i].toString()) /resultCount);			
 		}
 		resultCount = 0;
-		return result;
+		return tuple;
 	}
 	
 	public void getUpdate(Datum[] tuple){
