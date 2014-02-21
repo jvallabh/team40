@@ -86,7 +86,7 @@ public class ProjectionOperator implements Operator {
 				List expList = ((Function) expr).getParameters().getExpressions();
 				for(int i=0;i<expList.size();i++){
 					if(expList.get(i) instanceof Column){
-						Column col = (Column) expr;
+						Column col = (Column) expList.get(i);
 						return (schema[getColumnID(col)].colDef.getColDataType());
 					}
 				}
