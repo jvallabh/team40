@@ -11,14 +11,17 @@ import edu.buffalo.cse562.Evaluator.Type;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.DoubleValue;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.LongValue;
 import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.statement.create.table.ColDataType;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.select.AllColumns;
+import net.sf.jsqlparser.statement.select.AllTableColumns;
 import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
 
 /**
  * @author The Usual Suspects
@@ -34,6 +37,7 @@ public class ProjectionOperator implements Operator {
 	List<SelectItem> selectItems;
 	ArrayList<Integer> itemList = new ArrayList<>();
 	ColumnInfo[] finalSchema;
+	private static int sum=1,avg=2,count=3,min=4,max=5;
 	
 	public ProjectionOperator(Operator input, ColumnInfo[] schema, List<SelectItem> selectItems) {
 		this.input = input;
@@ -55,6 +59,7 @@ public class ProjectionOperator implements Operator {
 		if (expr instanceof Parenthesis) {
 			return getNumType(((Parenthesis) expr).getExpression());
 		}
+		
 		if (expr instanceof BinaryExpression) {
 			ColDataType colDataType = getNumType(((BinaryExpression) expr).getLeftExpression());
 			if (colDataType == null) {
@@ -66,35 +71,97 @@ public class ProjectionOperator implements Operator {
 			Column col = (Column) expr;
 			return (schema[getColumnID(col)].colDef.getColDataType());
 		}
+		else if (expr instanceof Function) {
+			if(((Function) expr).getName().equalsIgnoreCase("count")) {
+				ColDataType colDataType =  new ColDataType();
+				colDataType.setDataType("int");
+				return colDataType;
+			}
+			else if(((Function) expr).getName().equalsIgnoreCase("avg")) {
+				ColDataType colDataType =  new ColDataType();
+				colDataType.setDataType("double");
+				return colDataType;
+			}
+			else {
+				List expList = ((Function) expr).getParameters().getExpressions();
+				for(int i=0;i<expList.size();i++){
+					if(expList.get(i) instanceof Column){
+						Column col = (Column) expr;
+						return (schema[getColumnID(col)].colDef.getColDataType());
+					}
+				}
+				return getNumType((Expression)expList.get(0));
+			}
+		}
 		return null;
 	}
 	
 	public String getTableName(Expression expr) {
 		if (expr instanceof Column) {
 			return ((Column) expr).getTable().getName();
-		} else 
+		}
+		else 
 			return new String("dummy");
 	}
 	
+	public int isFunction(Function f) {
+		int function=0;
+		if(f.getName().toString().equalsIgnoreCase("SUM"))
+	            function =sum;
+	    if(f.getName().toString().equalsIgnoreCase("MIN"))
+	    		function =min;
+	    if(f.getName().toString().equalsIgnoreCase("MAX"))
+	    		function =max;
+	    if(f.getName().toString().equalsIgnoreCase("AVG"))
+	    		function =avg;
+	    if(f.getName().toString().equalsIgnoreCase("COUNT"))
+	    		function =count;
+	    else 
+	            function =0;
+	    return function;
+	}
 	public ColumnInfo[] changeSchema(List selectItems) {
-		if (selectItems.get(0) instanceof AllColumns)
-		return schema;
-		ColumnInfo[] schema = new ColumnInfo[selectItems.size()];
+		ColumnInfo[] schema;
+		ArrayList<ColumnInfo> schemaList = new ArrayList();
 		SelectExpressionItem exp;
 		for (int j=0; j<selectItems.size(); j++) {
-			ColumnDefinition colDef = new ColumnDefinition();
-			exp = (SelectExpressionItem)selectItems.get(j);
-			if(exp.getAlias()!=null) {
-				colDef.setColumnName(exp.getAlias());
-			}
+			if (selectItems.get(j) instanceof AllColumns || selectItems.get(j) instanceof AllTableColumns)
+				schemaList = appendAllColumns(schemaList, (SelectItem) selectItems.get(j));
 			else {
-				colDef.setColumnName(exp.toString());
+				ColumnDefinition colDef = new ColumnDefinition();
+				exp = (SelectExpressionItem)selectItems.get(j);
+				if(exp.getAlias()!=null) {
+					colDef.setColumnName(exp.getAlias());
+				}
+				else {
+					colDef.setColumnName(exp.toString());
+				}
+				colDef.setColDataType(getNumType(exp.getExpression()));
+				if(exp.getExpression() instanceof Function) {
+					schemaList.add(new ColumnInfo(colDef, getTableName(exp.getExpression()),isFunction((Function) exp.getExpression())));
+				}
+				else
+					schemaList.add(new ColumnInfo(colDef, getTableName(exp.getExpression()),0));
 			}
-			colDef.setColDataType(getNumType(exp.getExpression()));
-			schema[j] = new ColumnInfo(colDef, getTableName(exp.getExpression()));
 		}
-		
+		schema = schemaList.toArray(new ColumnInfo[0]);
 		return schema;
+	}
+	
+	public ArrayList appendAllColumns(ArrayList schemaList, SelectItem AllColumns) {
+		if(AllColumns instanceof AllColumns) {
+			for(int i=0;i<schema.length;i++) {
+					schemaList.add(schema[i]);
+			}
+		}
+		else {
+			Table t = ((AllTableColumns) AllColumns).getTable();
+			for(int i=0;i<schema.length;i++) {
+				if(t.getName().equals(schema[i].tableName))
+					schemaList.add(schema[i]);
+			}
+		}
+		return schemaList;
 	}
 	
 	@Override

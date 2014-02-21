@@ -38,14 +38,14 @@ public class FromScanner implements FromItemVisitor {
 	@Override
 	public void visit(Table tableName) {
 		//System.out.println("Visit method with tableName is called");
-		CreateTable table = tables.get(tableName.getName());
+		CreateTable table = tables.get(tableName.getName().toUpperCase());
 		List<?> colDefs = table.getColumnDefinitions();
 		ColumnDefinition[] colDefschema = new ColumnDefinition[colDefs.size()];
 		schema = new ColumnInfo[colDefs.size()];
 		colDefs.toArray(colDefschema);
 		for(int i=0;i<colDefschema.length;i++){
 			String tableNameEffective=tableName.getAlias() != null?tableName.getAlias():tableName.getName();
-			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective);
+			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective,0);
 		}
 		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"), schema);
 		
