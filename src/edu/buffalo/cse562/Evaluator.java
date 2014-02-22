@@ -165,9 +165,11 @@ public class Evaluator implements ExpressionVisitor {
 				}
 			}
 			// Sets the data-type of the element in the column
-			if (schema[colID].colDef.getColDataType().getDataType().equals("int")) {
+			if (schema[colID].colDef.getColDataType().getDataType().equalsIgnoreCase("int")) {
 				return Type.INT;
-			} else if (schema[colID].colDef.getColDataType().getDataType().equals("double")) {
+			} else if (schema[colID].colDef.getColDataType().getDataType().equalsIgnoreCase("double")) {
+				return Type.DOUBLE;
+			} else if (schema[colID].colDef.getColDataType().getDataType().equalsIgnoreCase("decimal")) {
 				return Type.DOUBLE;
 			} 
 			// Sets the data-type of the element
