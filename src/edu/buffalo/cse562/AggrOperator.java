@@ -75,16 +75,20 @@ public class AggrOperator implements Operator {
 			if(selectItemType[i]==avg)
 			tuple[i].element = Double.toString(Double.parseDouble(tuple[i].toString()) /resultCount);
 		}
-		resultCount = 0;
+		resultCount = 1;
 		return tuple;
 	}
 	public void getUpdate(Datum[] tuple) {
 		for (int i=0; i<tuple.length;i++) {
 			if(selectItemType[i]==sum)
-			result[i].element = Math.getSum(result[i].toString(), tuple[i].toString(),i,schema); else if(selectItemType[i]==min)
-			result[i].element = Math.getMin(result[i].toString(), tuple[i].toString(),i,schema); else if(selectItemType[i]==max)
-			result[i].element = Math.getMax(result[i].toString(), tuple[i].toString(),i,schema); else if(selectItemType[i]==avg)
-			result[i].element = Math.getSum(result[i].toString(), tuple[i].toString(),i,schema); else if(selectItemType[i]==count)
+			result[i].element = Math.getSum(result[i].toString(), tuple[i].toString(),i,schema); 
+			else if(selectItemType[i]==min)
+			result[i].element = Math.getMin(result[i].toString(), tuple[i].toString(),i,schema); 
+			else if(selectItemType[i]==max)
+			result[i].element = Math.getMax(result[i].toString(), tuple[i].toString(),i,schema); 
+			else if(selectItemType[i]==avg)
+			result[i].element = Math.getSum(result[i].toString(), tuple[i].toString(),i,schema); 
+			else if(selectItemType[i]==count)
 			result[i].element = Math.getSum(result[i].toString(), tuple[i].toString(),i,schema);
 		}
 	}
