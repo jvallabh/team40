@@ -73,9 +73,9 @@ public class AggrOperator implements Operator {
 		return null;
 		for (int i=0; i<tuple.length;i++) {
 			if(selectItemType[i]==avg)
-			tuple[i].element = Double.toString(Double.parseDouble(tuple[i].toString()) /resultCount);
+			tuple[i].element = Double.toString((Double.parseDouble(tuple[i].toString())*1000.0) /(resultCount*1000.0));
 		}
-		resultCount = 0;
+		resultCount = 1;
 		return tuple;
 	}
 	public void getUpdate(Datum[] tuple) {
