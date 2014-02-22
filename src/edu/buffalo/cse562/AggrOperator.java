@@ -39,6 +39,8 @@ public class AggrOperator implements Operator {
 		this.schema = schema;
 		this.selectItems = selectItems;
 		this.selectItemType= getSelectItemType(schema);
+		this.result = input.readOneTuple();
+		resultCount++;
 	}
 	
 	public int getColumnID(Column col) {
@@ -51,11 +53,10 @@ public class AggrOperator implements Operator {
 	}
 	
 	@Override
-	public Datum[] readOneTuple() {
-		if(result==null){
-		result = input.readOneTuple();
-		resultCount++;
-		}
+	
+	
+	public Datum[] readOneTuple() {		
+		
 		while(result!=null){
 		Datum[] tuple = input.readOneTuple();
 		if(tuple==null){
@@ -71,12 +72,9 @@ public class AggrOperator implements Operator {
 				result =tuple;
 				return getResult(tmp);
 			}
-			else{
-				getUpdate(tuple);
-				break;
-
-			}
-		  }		
+		}
+			getUpdate(tuple);		
+	  		
 		}
 		return getResult(result);
 	}
@@ -95,8 +93,7 @@ public class AggrOperator implements Operator {
 	}
 	
 	public void getUpdate(Datum[] tuple){
-		if(tuple==null)
-			return;
+		
 		for(int i=0; i<tuple.length;i++)
 		{
 			if(selectItemType[i]==sum)
