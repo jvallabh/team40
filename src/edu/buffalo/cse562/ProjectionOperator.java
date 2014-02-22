@@ -49,7 +49,7 @@ public class ProjectionOperator implements Operator {
 	public int getColumnID(Column col) {
 		if(col.getTable().getName()!=null) {
 			for (int i=0; i<schema.length; i++) {
-				if (schema[i].colDef.getColumnName().equals(col.getColumnName())&&schema[i].tableName.equals(col.getTable().toString())) {
+				if (schema[i].colDef.getColumnName().equalsIgnoreCase(col.getColumnName())&&schema[i].tableName.equalsIgnoreCase(col.getTable().toString())) {
 					return i;
 				}
 			}
