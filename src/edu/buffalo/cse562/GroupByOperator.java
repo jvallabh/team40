@@ -42,7 +42,8 @@ public class GroupByOperator implements Operator {
 			String grpByColumnTable = grpByColumn.getTable().getName();
 			String columnName = grpByColumn.getColumnName();
 			for(int i=0;i<schema.length;i++){
-				if(schema[i].tableName.equalsIgnoreCase(grpByColumnTable) && schema[i].colDef.getColumnName().equalsIgnoreCase(columnName)){
+				boolean isSameColumnName = schema[i].colDef.getColumnName().equalsIgnoreCase(columnName) || schema[i].colDef.getColumnName().equalsIgnoreCase(grpByColumnTable+"."+columnName);
+				if(schema[i].tableName.equalsIgnoreCase(grpByColumnTable) && isSameColumnName){
 					grpByColumnIndex = i;
 					break;
 				}
