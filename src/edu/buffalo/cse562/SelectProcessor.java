@@ -11,6 +11,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
@@ -49,6 +50,10 @@ public class SelectProcessor {
 		boolean hasGroupBy = groupByColumns == null?false:true;
 		GroupByOperator finalGrpByOperator = null;
 		
+		List<OrderByElement> orderByColumns = pselect.getOrderByElements();
+		boolean hasOrderBy = orderByColumns == null?false:true;
+		OrderByOperator finalOrderByOperator = null;
+		
 		SelectionOperator selectOperator = null;
 		ProjectionOperator projectOperator = null;
 		
@@ -68,7 +73,16 @@ public class SelectProcessor {
 		Operator intputToAggr = finalGrpByOperator!=null?finalGrpByOperator:projectOperator;
 
 		AggrOperator aggrOperator = new AggrOperator(intputToAggr,intputToAggr.getSchema(),selectItems);
-		return (Operator) aggrOperator;		
+		
+		if(hasOrderBy){
+			finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
+		}
+		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
+		
+		if(hasGroupBy && hasOrderBy){
+			finalOperator = (GroupByOperator) Util.getGroupByOperator(finalOperator, groupByColumns);
+		}
+		return (Operator) finalOperator;		
   }	
 	
 }

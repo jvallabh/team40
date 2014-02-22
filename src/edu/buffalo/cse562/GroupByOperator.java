@@ -84,23 +84,25 @@ public class GroupByOperator implements Operator {
 				groupedMap.put(grpKey, finalGroupedList);				
 			}
 		}
-		
-		//When we are doing the group by for the first time
-		Datum[] currTuple = null;
-		while((currTuple = input.readOneTuple()) != null){
-			if(groupedMap.containsKey(currTuple[grpByColumnIndex].String())){
-				groupedMap.get(currTuple[grpByColumnIndex].String()).add(currTuple);
-			}
-			else{
-				ArrayList<Datum[]> datumList = new ArrayList<>();
-				datumList.add(currTuple);
-				groupedMap.put(currTuple[grpByColumnIndex].String(), datumList);
-			}
+		else{			
+			//When we are doing the group by for the first time
+			Datum[] currTuple = null;
+			while((currTuple = input.readOneTuple()) != null){
+				if(groupedMap.containsKey(currTuple[grpByColumnIndex].String())){
+					groupedMap.get(currTuple[grpByColumnIndex].String()).add(currTuple);
+				}
+				else{
+					ArrayList<Datum[]> datumList = new ArrayList<>();
+					datumList.add(currTuple);
+					groupedMap.put(currTuple[grpByColumnIndex].String(), datumList);
+				}
+			}			
 		}		
 	}
 
 	@Override
 	public Datum[] readOneTuple() {
+		//System.out.println("Grouped map size is: "+groupedMap.size());
 		if(currHashKeyIndex>=groupedMap.size()){
 			return null;
 		}
