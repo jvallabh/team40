@@ -2,6 +2,8 @@ package edu.buffalo.cse562;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.sql.Date;
 import java.util.Iterator;
 import java.util.Locale;
@@ -240,8 +242,10 @@ public class Evaluator implements ExpressionVisitor {
 		leftVal = this.getValue();
 		right.accept(this);
 		rightVal = this.getValue();
-		if(dataTypeLeft==Type.DOUBLE||dataTypeRight==Type.DOUBLE)
-			value = ((Double)(Double.parseDouble(leftVal) + Double.parseDouble(rightVal))).toString();
+		if (dataTypeLeft == Type.DOUBLE || dataTypeRight == Type.DOUBLE) {
+			Double val = (Double)((Double.parseDouble(leftVal)*1000.0) + (Double.parseDouble(rightVal))*1000.0)/1000.0;
+			value = val.toString();
+		}
 		else
 			value = ((Integer)(Integer.parseInt(leftVal) + Integer.parseInt(rightVal))).toString();
 	}
@@ -261,7 +265,8 @@ public class Evaluator implements ExpressionVisitor {
 				value = ((Integer)(Integer.parseInt(leftVal)/Integer.parseInt(rightVal))).toString();
 				break;
 			case DOUBLE:
-				value = ((Double)(Double.parseDouble(leftVal)/Double.parseDouble(rightVal))).toString();
+				Double val = (Double)((Double.parseDouble(leftVal)*1000.0) - (Double.parseDouble(rightVal))*1000.0);
+				value = val.toString();
 				break;
 		}
 	}
@@ -281,7 +286,8 @@ public class Evaluator implements ExpressionVisitor {
 				value = ((Integer)(Integer.parseInt(leftVal) * Integer.parseInt(rightVal))).toString();
 				break;
 			case DOUBLE:
-				value = ((Double)(Double.parseDouble(leftVal) * Double.parseDouble(rightVal))).toString();
+				Double val = (Double)((Double.parseDouble(leftVal)*1000.0) * (Double.parseDouble(rightVal))*1000.0)/1000000.0;
+				value = val.toString();
 				break;
 		}
 	}
@@ -297,8 +303,10 @@ public class Evaluator implements ExpressionVisitor {
 		leftVal = this.getValue();
 		right.accept(this);
 		rightVal = this.getValue();
-		if(dataTypeLeft==Type.DOUBLE||dataTypeRight==Type.DOUBLE)
-			value = ((Double)(Double.parseDouble(leftVal) - Double.parseDouble(rightVal))).toString();
+		if(dataTypeLeft==Type.DOUBLE||dataTypeRight==Type.DOUBLE) {
+			Double val = (Double)((Double.parseDouble(leftVal)*1000.0) - (Double.parseDouble(rightVal))*1000.0)/1000.0;
+			value = val.toString();
+		}
 		else
 			value = ((Integer)(Integer.parseInt(leftVal) - Integer.parseInt(rightVal))).toString();
 	}
