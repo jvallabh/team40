@@ -205,7 +205,7 @@ public class Evaluator implements ExpressionVisitor {
 				}
 			}
 			// Sets the data-type of the element in the column
-			if (schema[colID].colDef.getColDataType().getDataType().equals("int")) {
+			if (schema[colID].colDef.getColDataType().getDataType().equalsIgnoreCase("int")) {
 				return Type.INT;
 			} else if (schema[colID].colDef.getColDataType().getDataType().equalsIgnoreCase("double")) {
 				return Type.DOUBLE;
@@ -347,7 +347,6 @@ public class Evaluator implements ExpressionVisitor {
 	}
 	
 	public int getColumnID(Column col) {
-
 		if (col.getTable().getName() == null) {
 			for (int i=0; i<schema.length; i++) {
 				if (schema[i].colDef.getColumnName().equals(col.getColumnName())) {

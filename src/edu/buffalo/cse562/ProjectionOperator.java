@@ -117,16 +117,14 @@ public class ProjectionOperator implements Operator {
 		int function=0;
 		if(f.getName().toString().equalsIgnoreCase("SUM"))
 	            function =sum;
-	    if(f.getName().toString().equalsIgnoreCase("MIN"))
+		else if(f.getName().toString().equalsIgnoreCase("MIN"))
 	    		function =min;
-	    if(f.getName().toString().equalsIgnoreCase("MAX"))
+		else if(f.getName().toString().equalsIgnoreCase("MAX"))
 	    		function =max;
-	    if(f.getName().toString().equalsIgnoreCase("AVG"))
+		else if(f.getName().toString().equalsIgnoreCase("AVG"))
 	    		function =avg;
-	    if(f.getName().toString().equalsIgnoreCase("COUNT"))
+		else if(f.getName().toString().equalsIgnoreCase("COUNT"))
 	    		function =count;
-	    else 
-	            function =0;
 	    return function;
 	}
 	public ColumnInfo[] changeSchema(List selectItems) {

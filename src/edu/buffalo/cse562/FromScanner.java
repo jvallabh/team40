@@ -64,7 +64,6 @@ public class FromScanner implements FromItemVisitor {
 	@Override
 	public void visit(SubJoin arg0) {
 		//System.out.println("Visit method with SubJoin is called");
-		
 	}
 
 }

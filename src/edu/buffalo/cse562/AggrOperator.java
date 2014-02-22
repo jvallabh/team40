@@ -58,7 +58,7 @@ public class AggrOperator implements Operator {
 			}
 			resultCount++;
 			for (int i=0; i<tuple.length;i++) {
-				if(selectItemType[i]==0 && !result[i].element.equals(tuple[i].element)) {
+				if(selectItemType[i]==0 && !(result[i].element.equals(tuple[i].element))) {
 					Datum [] tmp = result;
 					result =tuple;
 					return getResult(tmp);

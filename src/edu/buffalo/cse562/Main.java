@@ -59,8 +59,7 @@ public class Main {
 						if(select instanceof PlainSelect){
 							PlainSelect pselect = (PlainSelect)select;
 							Operator resultOperator = SelectProcessor.processPlainSelect(pselect);
-							Util.printOutputTuples(resultOperator);
-							
+							Util.printOutputTuples(resultOperator);					
 						}							
 					}
 				}

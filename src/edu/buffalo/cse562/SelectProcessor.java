@@ -74,15 +74,15 @@ public class SelectProcessor {
 
 		AggrOperator aggrOperator = new AggrOperator(intputToAggr,intputToAggr.getSchema(),selectItems);
 		
-		if(hasOrderBy){
+		/*if(hasOrderBy){
 			finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
 		}
 		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
 		
 		if(hasGroupBy && hasOrderBy){
 			finalOperator = (GroupByOperator) Util.getGroupByOperator(finalOperator, groupByColumns);
-		}
-		return (Operator) finalOperator;		
+		}*/
+		return (Operator) aggrOperator;		
   }	
 	
 }
