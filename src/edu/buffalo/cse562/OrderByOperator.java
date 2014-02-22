@@ -49,6 +49,7 @@ public class OrderByOperator implements Operator {
 		for(SortableTuple curr:sortableTuples){
 			orderedTuples.add(curr.tuple);
 		}
+		sortableTuples = null;
 	}
 
 	@Override
