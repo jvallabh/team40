@@ -16,20 +16,21 @@ public class SortableTuple implements Comparator<SortableTuple> {
 	@Override
 	public int compare(SortableTuple arg0, SortableTuple arg1) {
 		// TODO Auto-generated method stub
-		int  x=0;
+		int  x=0;int j=0;
 		for(int i:orderByColumnIndex){
 			//System.out.println("Column datatype is: "+schema[i].colDef.getColDataType());
 			String colDataType = schema[i].colDef.getColDataType().getDataType();
 			if(x!=0) break;
 			if(colDataType.equalsIgnoreCase("double")){
-				x  = Double.compare(Double.parseDouble(arg0.tuple[i].element),Double.parseDouble(arg1.tuple[i].element));
+				x  = orderIndex[j]*Double.compare(Double.parseDouble(arg0.tuple[i].element),Double.parseDouble(arg1.tuple[i].element));
 			}				 
 			if(colDataType.equalsIgnoreCase("int")){
-				x  = Integer.compare(Integer.parseInt(arg0.tuple[i].element),Integer.parseInt(arg1.tuple[i].element));
+				x  = orderIndex[j]*Integer.compare(Integer.parseInt(arg0.tuple[i].element),Integer.parseInt(arg1.tuple[i].element));
 			}				 
 			if(colDataType.equalsIgnoreCase("double")){
-				x  =arg0.tuple[i].toString().compareTo(arg1.tuple[i].element);
+				x  =orderIndex[j]*arg0.tuple[i].toString().compareTo(arg1.tuple[i].element);
 			}				 
+			j++;
 		}
 		return x;
 	}
