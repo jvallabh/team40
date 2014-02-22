@@ -21,7 +21,9 @@ public class Math {
 		else
 			ans = c;
 		
-		if(schema[i].colDef.getColDataType().getDataType().equals("double"))
+		if(schema[i].colDef.getColDataType().getDataType().equalsIgnoreCase("double"))
+			return Double.toString(ans);
+		else if(schema[i].colDef.getColDataType().getDataType().equalsIgnoreCase("decimal"))
 			return Double.toString(ans);
 		else
 			return Integer.toString((int)ans);	
@@ -36,8 +38,9 @@ public class Math {
 			ans = c ;
 		else
 			ans = d;
-		
-		if(schema[i].colDef.getColDataType().getDataType().equals("double"))
+		if(schema[i].colDef.getColDataType().getDataType().equalsIgnoreCase("double"))
+			return Double.toString(ans);
+		else if(schema[i].colDef.getColDataType().getDataType().equalsIgnoreCase("decimal"))
 			return Double.toString(ans);
 		else
 			return Integer.toString((int)ans);
