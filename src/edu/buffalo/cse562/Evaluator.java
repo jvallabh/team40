@@ -84,7 +84,7 @@ public class Evaluator implements ExpressionVisitor {
 	public void visit(Function arg0) {
 		if(arg0 instanceof Function) {
 			Function aggFunc = (Function) arg0;
-			if(arg0.getName().equals("COUNT")){	
+			if(arg0.getName().equalsIgnoreCase("COUNT")){	
 				value = "1";
 				return;
 			}
@@ -229,20 +229,17 @@ public class Evaluator implements ExpressionVisitor {
 	public void visit(Addition arg0) {
 		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		Type dataType = getNumType(left);
+		Type dataTypeLeft = getNumType(left);
+		Type dataTypeRight = getNumType(right);
 		String leftVal, rightVal;
 		left.accept(this);
 		leftVal = this.getValue();
 		right.accept(this);
 		rightVal = this.getValue();
-		switch (dataType) {
-			case INT:
-				value = ((Integer)(Integer.parseInt(leftVal) + Integer.parseInt(rightVal))).toString();
-				break;
-			case DOUBLE:
-				value = ((Double)(Double.parseDouble(leftVal) + Double.parseDouble(rightVal))).toString();
-				break;
-		}
+		if(dataTypeLeft==Type.DOUBLE||dataTypeRight==Type.DOUBLE)
+			value = ((Double)(Double.parseDouble(leftVal) + Double.parseDouble(rightVal))).toString();
+		else
+			value = ((Integer)(Integer.parseInt(leftVal) + Integer.parseInt(rightVal))).toString();
 	}
 
 	@Override
@@ -289,20 +286,17 @@ public class Evaluator implements ExpressionVisitor {
 	public void visit(Subtraction arg0) {
 		Expression left = arg0.getLeftExpression();
 		Expression right = arg0.getRightExpression();
-		Type dataType = getNumType(left);
+		Type dataTypeLeft = getNumType(left);
+		Type dataTypeRight = getNumType(right);
 		String leftVal, rightVal;
 		left.accept(this);
 		leftVal = this.getValue();
 		right.accept(this);
 		rightVal = this.getValue();
-		switch (dataType) {
-			case INT:
-				value = ((Integer)(Integer.parseInt(leftVal) - Integer.parseInt(rightVal))).toString();
-				break;
-			case DOUBLE:
-				value = ((Double)(Double.parseDouble(leftVal) - Double.parseDouble(rightVal))).toString();
-				break;
-		}
+		if(dataTypeLeft==Type.DOUBLE||dataTypeRight==Type.DOUBLE)
+			value = ((Double)(Double.parseDouble(leftVal) - Double.parseDouble(rightVal))).toString();
+		else
+			value = ((Integer)(Integer.parseInt(leftVal) - Integer.parseInt(rightVal))).toString();
 	}
 
 	@Override
