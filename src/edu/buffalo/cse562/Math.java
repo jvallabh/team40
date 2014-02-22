@@ -44,7 +44,7 @@ public class Math {
 		double c = Double.parseDouble(a);
 		double d = Double.parseDouble(b);
 		
-		if(schema[i].colDef.getColDataType().getDataType().equals("double"))
+		if(schema[i].colDef.getColDataType().getDataType().equalsIgnoreCase("double"))
 			return Double.toString(c+d);
 		else
 			return Integer.toString((int)(c+d));	
