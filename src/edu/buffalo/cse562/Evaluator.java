@@ -348,7 +348,7 @@ public class Evaluator implements ExpressionVisitor {
 	
 	public int getColumnID(Column col) {
 		for (int i=0; i<schema.length; i++) {
-			if (schema[i].colDef.getColumnName().equals(col.getColumnName())) {
+			if ((schema[i].colDef.getColumnName().equals(col.getColumnName())) && (schema[i].tableName.equals(col.getTable().getName()))) {
 				return i;
 			}
 		}
