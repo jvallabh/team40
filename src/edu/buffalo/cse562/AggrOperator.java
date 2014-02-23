@@ -30,6 +30,7 @@ public class AggrOperator implements Operator {
 	Datum[] result=null;
 	int[] selectItemType;
 	int resultCount =0;
+	int tmpCount=0;
 	private static int sum=1,avg=2,count=3,min=4,max=5;
 	public AggrOperator(Operator input, ColumnInfo[] schema, List<SelectItem> selectItems) {
 		this.input = input;
@@ -37,7 +38,7 @@ public class AggrOperator implements Operator {
 		this.selectItems = selectItems;
 		this.selectItemType= getSelectItemType(schema);
 		this.result = input.readOneTuple();
-		resultCount++;
+		tmpCount++;
 	}
 	public int getColumnID(Column col) {
 		for (int i=0; i<schema.length; i++) {
@@ -54,13 +55,16 @@ public class AggrOperator implements Operator {
 			if(tuple==null) {
 				Datum[] tmp = result;
 				result =null;
+				resultCount =tmpCount;
 				return getResult(tmp);
 			}
-			resultCount++;
+			tmpCount++;
 			for (int i=0; i<tuple.length;i++) {
 				if(selectItemType[i]==0 && !(result[i].element.equals(tuple[i].element))) {
 					Datum [] tmp = result;
 					result =tuple;
+					resultCount= tmpCount-1;
+					tmpCount =1;
 					return getResult(tmp);
 				}
 			}
@@ -75,7 +79,7 @@ public class AggrOperator implements Operator {
 			if(selectItemType[i]==avg)
 			tuple[i].element = Double.toString((Double.parseDouble(tuple[i].toString())*1000.0) /(resultCount*1000.0));
 		}
-		resultCount = 1;
+		
 		return tuple;
 	}
 	public void getUpdate(Datum[] tuple) {
