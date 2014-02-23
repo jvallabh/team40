@@ -315,11 +315,15 @@ public class Evaluator implements ExpressionVisitor {
 	public void visit(AndExpression arg0) {
 		arg0.getLeftExpression().accept(this);
 		boolean leftval = this.getBool();
+		if (leftval == false) { 
+			result = false;
+			return;
+		}
 		
 		arg0.getRightExpression().accept(this);
 		boolean rightval = this.getBool();
 		
-		if (leftval && rightval) 
+		if (rightval) 
 			result = true;
 		else 
 			result=false;
@@ -330,10 +334,15 @@ public class Evaluator implements ExpressionVisitor {
 		arg0.getLeftExpression().accept(this);
 		boolean leftval = this.getBool();
 		
+		if (leftval == true) {
+			result = true;
+			return;
+		}
+		
 		arg0.getRightExpression().accept(this);
 		boolean rightval = this.getBool();
 		
-		if (leftval || rightval) 
+		if (rightval) 
 			result = true;
 		else 
 			result=false;
