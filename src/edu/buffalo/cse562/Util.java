@@ -118,6 +118,8 @@ public class Util {
 			currExpression = andExp.getLeftExpression();
 		}
 		
+		//This is to handle the scenario SELECT * FROM R,S WHERE R.A='123'; 
+		//Since here WHERE clause is not an AndExpression, above while loop would have bypassed. So, handling that case here.
 		if(isSingleTableConditionExpression(currExpression)){
 			conditionsOnSingleTables.add(currExpression);
 			return;
