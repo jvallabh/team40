@@ -33,6 +33,9 @@ public class SelectProcessor {
 	 */
 	static Operator processPlainSelect(PlainSelect pselect){
 		Expression selectCondition = pselect.getWhere();
+		Util.partitionWhereClause(selectCondition);
+		//System.out.println("Extracted conditions affecting single table: "+Util.conditionsOnSingleTables);
+		
 		List<SelectItem> selectItems= pselect.getSelectItems();
 		FromScanner fromscan = new FromScanner(Main.dataDir, Main.tables);
 		pselect.getFromItem().accept(fromscan);
@@ -74,15 +77,15 @@ public class SelectProcessor {
 
 		AggrOperator aggrOperator = new AggrOperator(intputToAggr,intputToAggr.getSchema(),selectItems);
 		
-		/*if(hasOrderBy){
+		if(hasOrderBy){
 			finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
 		}
 		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
 		
 		if(hasGroupBy && hasOrderBy){
 			finalOperator = (GroupByOperator) Util.getGroupByOperator(finalOperator, groupByColumns);
-		}*/
-		return (Operator) aggrOperator;		
+		}
+		return (Operator) finalOperator;		
   }	
 	
 }

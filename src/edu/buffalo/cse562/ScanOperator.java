@@ -7,6 +7,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import net.sf.jsqlparser.expression.Expression;
 
 /**
  * @author The Usual Suspects
@@ -21,11 +25,13 @@ public class ScanOperator implements Operator {
 	BufferedReader input;
 	File f;
 	ColumnInfo[] schema;
+	ArrayList<Expression> conditions;
 	
 	public ScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
 		this.schema = schema;
 		reset();
+		conditions = Util.getConditionsOfTable(schema);
 	}
 	
 	@Override
@@ -44,7 +50,12 @@ public class ScanOperator implements Operator {
 			//ret[i] = new Datum.Long(cols[i]);
 			ret[i] = new Datum(cols[i]);
 		}
-		return ret;
+		if(evaluateTuple(ret)){
+			return ret;
+		}
+		else{
+			return readOneTuple();
+		}
 	}
 
 
@@ -62,5 +73,22 @@ public class ScanOperator implements Operator {
 	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
+	}
+	
+	private boolean evaluateTuple(Datum[] tuple){
+		boolean result = true;
+		if(conditions.size() != 0){
+			Iterator<Expression> iterator = conditions.iterator();
+			while(iterator.hasNext()){
+				Expression currCondition = iterator.next();				
+				Evaluator eval = new Evaluator(schema, tuple);
+				currCondition.accept(eval);
+					if (!(eval.getBool())) {
+						result = false;
+						break;
+					}				
+			}
+		}
+		return result;
 	}
 }
