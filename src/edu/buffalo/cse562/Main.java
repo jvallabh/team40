@@ -24,6 +24,7 @@ import net.sf.jsqlparser.statement.select.SelectBody;
 public class Main {
 	public static File dataDir;
 	public static HashMap<String, CreateTable> tables;
+	public static File swapDir;
 
 	/**
 	 * @param args
@@ -35,6 +36,10 @@ public class Main {
 		for(i=0;i<args.length;i++){
 			if(args[i].equals("--data")){
 				dataDir = new File(args[i+1]);
+				i++;
+			}
+			else if(args[i].equals("--swap")) {
+				swapDir = new File(args[i+1]);
 				i++;
 			}
 			else{
