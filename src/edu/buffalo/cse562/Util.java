@@ -51,12 +51,13 @@ public class Util {
 		
 	}
 	
-	public static Operator getJoinedOperator(Operator firstTable, List<Join> joinDetails){
+	public static Operator getJoinedOperator(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables){
 		JoinOperator finalJoinedOperator = null;
 		for(Join currJoin:joinDetails){
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
 			currJoin.getRightItem().accept(tempFromScan);
 			Operator tempTableOperator = tempFromScan.source;
+			((ScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
 			if(currJoin.isSimple()){
 				if(finalJoinedOperator == null){
 					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, null);
@@ -220,6 +221,11 @@ public class Util {
 			Column currColumn = (Column) ((BinaryExpression)currExp).getLeftExpression();
 			for (int i=0; i<schema.length; i++) {
 				if (schema[i].colDef.getColumnName().equals(currColumn.getColumnName())) {
+					if(currColumn.getTable().getName() != null){
+						if(!currColumn.getTable().getName().equals(schema[i].tableName)){
+							continue;
+						}						
+					}
 					output.add(currExp);
 					break;
 				}

@@ -65,7 +65,7 @@ public class SelectProcessor {
 		ProjectionOperator projectOperator = null;
 		
 		if(hasJoin){
-			finalJoinedOperator = (JoinOperator) Util.getJoinedOperator(firstTableOperator, joinDetails);
+			finalJoinedOperator = (JoinOperator) Util.getJoinedOperator(firstTableOperator, joinDetails, conditionsOnSingleTables);
 			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, whereCondExpressions);
 		}
 		else{			
