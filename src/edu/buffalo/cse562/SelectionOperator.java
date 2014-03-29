@@ -3,7 +3,12 @@
  */
 package edu.buffalo.cse562;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.schema.Column;
 
 /**
  * @author The Usual Suspects
@@ -16,9 +21,9 @@ import net.sf.jsqlparser.expression.Expression;
 public class SelectionOperator implements Operator {
 	Operator input;
 	ColumnInfo[] schema;
-	Expression condition;
+	ArrayList<Expression> condition;
 	
-	public SelectionOperator(Operator input, ColumnInfo[] schema, Expression condition){
+	public SelectionOperator(Operator input, ColumnInfo[] schema, ArrayList<Expression> condition){
 		this.input = input;
 		this.condition = condition;
 		this.schema = schema;
@@ -32,10 +37,15 @@ public class SelectionOperator implements Operator {
 			if (tuple == null) return null;
 			
 			Evaluator eval = new Evaluator(schema, tuple);
-			if(condition != null){
-				condition.accept(eval);
-				if (!(eval.getBool())) {
-					tuple = null;
+			if(condition.size() != 0){
+				Iterator<Expression> iterator = condition.iterator();
+				while(iterator.hasNext()){
+					Expression currExp = iterator.next();
+					currExp.accept(eval);
+					if (!(eval.getBool())) {
+						tuple = null;
+						break;
+					}
 				}				
 			}
 		} while (tuple == null);

@@ -30,8 +30,7 @@ public class ScanOperator implements Operator {
 	public ScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
 		this.schema = schema;
-		reset();
-		conditions = Util.getConditionsOfTable(schema);
+		reset(); 
 	}
 	
 	@Override

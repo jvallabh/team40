@@ -3,6 +3,7 @@
  */
 package edu.buffalo.cse562;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,13 +34,16 @@ public class SelectProcessor {
 	 */
 	static Operator processPlainSelect(PlainSelect pselect){
 		Expression selectCondition = pselect.getWhere();
-		Util.partitionWhereClause(selectCondition);
+		ArrayList[] partitionedConditions = Util.partitionWhereClause(selectCondition);
+		ArrayList<Expression> whereCondExpressions = partitionedConditions[0];
+		ArrayList<Expression> conditionsOnSingleTables = partitionedConditions[1];
 		//System.out.println("Extracted conditions affecting single table: "+Util.conditionsOnSingleTables);
 		
 		List<SelectItem> selectItems= pselect.getSelectItems();
 		FromScanner fromscan = new FromScanner(Main.dataDir, Main.tables);
 		pselect.getFromItem().accept(fromscan);
 		Operator firstTableOperator = fromscan.source;
+		((ScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
 									
 		/*
 		 * If JOIN is present in the SQL query then first we are fetching the list of JOIN tables.
@@ -62,10 +66,10 @@ public class SelectProcessor {
 		
 		if(hasJoin){
 			finalJoinedOperator = (JoinOperator) Util.getJoinedOperator(firstTableOperator, joinDetails);
-			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, selectCondition);
+			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, whereCondExpressions);
 		}
 		else{			
-			selectOperator = new SelectionOperator(firstTableOperator, firstTableOperator.getSchema(), selectCondition);
+			selectOperator = new SelectionOperator(firstTableOperator, firstTableOperator.getSchema(), whereCondExpressions);
 		}
 		
 		projectOperator = new ProjectionOperator(selectOperator,selectOperator.getSchema(),selectItems);

@@ -9,6 +9,8 @@ import java.util.List;
 
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
@@ -20,6 +22,9 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SubSelect;
 
 /**
  * @author The Usual Suspects
@@ -30,7 +35,6 @@ import net.sf.jsqlparser.statement.select.Join;
  * Anil Nalamalapu------------anilkuma@buffalo.edu
  */
 public class Util {
-	public static ArrayList<Expression> conditionsOnSingleTables = new ArrayList<>();
 	/**
 	 * Reads tuples from the inputOperator and prints it to the console
 	 * @param inputOperator
@@ -108,22 +112,38 @@ public class Util {
 	 * It fetches R.A='123', S.B='456' and stores them in a list.
 	 * @param where
 	 */
-	public static void partitionWhereClause(Expression where){
-		Expression currExpression = where;		
-		while(currExpression instanceof AndExpression){
-			AndExpression andExp = (AndExpression) currExpression;
-			if(isSingleTableConditionExpression(andExp.getRightExpression())){
-				conditionsOnSingleTables.add(andExp.getRightExpression());
+	public static ArrayList[] partitionWhereClause(Expression where){
+		ArrayList<Expression> conditionsOnSingleTables = new ArrayList<>();
+		ArrayList<Expression> whereCondExpressions = new ArrayList<>();
+		Expression currExpression = where;
+		while(currExpression instanceof Expression){
+			if(currExpression instanceof AndExpression){
+				AndExpression andExp = (AndExpression) currExpression;
+				Expression rightExp = andExp.getRightExpression();
+				if(isSingleTableConditionExpression(rightExp)){
+					conditionsOnSingleTables.add(rightExp);
+				}
+				else{
+					whereCondExpressions.add(rightExp);
+				}
+				currExpression = andExp.getLeftExpression();				
 			}
-			currExpression = andExp.getLeftExpression();
+			else if(isSingleTableConditionExpression(currExpression)){
+				conditionsOnSingleTables.add(currExpression);
+				break;
+			}
+			else{
+				whereCondExpressions.add(currExpression);
+				break;
+			}
 		}
+		//System.out.println("whereCondExpressions are: "+whereCondExpressions+" conditionsOnSingleTables are: "+conditionsOnSingleTables);
+		ArrayList[] partitionedConditions = {whereCondExpressions, conditionsOnSingleTables};
+		return partitionedConditions;
 		
 		//This is to handle the scenario SELECT * FROM R,S WHERE R.A='123'; 
 		//Since here WHERE clause is not an AndExpression, above while loop would have bypassed. So, handling that case here.
-		if(isSingleTableConditionExpression(currExpression)){
-			conditionsOnSingleTables.add(currExpression);
-			return;
-		}
+		
 	}
 	
 	/**
@@ -161,6 +181,25 @@ public class Util {
 		}
 		
 		if(currLeft instanceof Column && !(currRight instanceof Column)){
+			/*This is to handle conditions like
+			  ps1.supplycost = ( 
+			  SELECT min(ps2.supplycost) 
+	          FROM partsupp ps2, supplier s2, nation n2, region r2
+	          WHERE
+	              p1.partkey = ps2.partkey
+	              AND s2.suppkey = ps2.suppkey 
+	              AND s2.nationkey = n2.nationkey 
+	              AND n2.regionkey = r2.regionkey 
+	              AND r2.name = 'EUROPE'
+	          )*/
+			if(inputExp instanceof EqualsTo && currRight instanceof SubSelect){
+				SelectBody select = ((SubSelect) currRight).getSelectBody();
+				if(select instanceof PlainSelect){
+					PlainSelect pselect = (PlainSelect)select;
+					Datum[] resultTuple = SelectProcessor.processPlainSelect(pselect).readOneTuple();
+					((EqualsTo)inputExp).setRightExpression(new LongValue(resultTuple[0].String()));
+				}
+			}
 			return true;
 		}
 		return false;		
@@ -173,7 +212,7 @@ public class Util {
 	 * @param schema
 	 * @return
 	 */
-	public static ArrayList<Expression> getConditionsOfTable(ColumnInfo[] schema){
+	public static ArrayList<Expression> getConditionsOfTable(ColumnInfo[] schema, ArrayList<Expression> conditionsOnSingleTables){
 		ArrayList<Expression> output = new ArrayList<>();
 		Iterator<Expression> iterator = conditionsOnSingleTables.iterator();
 		while(iterator.hasNext()){
