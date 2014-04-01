@@ -24,6 +24,7 @@ public class JoinOperator implements Operator {
 	Datum[] tuple2 =null;
 	boolean active = false;
 	ArrayList<Expression> whereJoinCondition;
+	ArrayList<Integer[]> whereJoinIndexes;
 	
 	public JoinOperator(Operator input1, Operator input2, Expression condition){
 		this.input1 = input1;

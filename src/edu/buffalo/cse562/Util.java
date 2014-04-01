@@ -61,22 +61,30 @@ public class Util {
 			if(currJoin.isSimple()){
 				if(finalJoinedOperator == null){
 					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, null);
-					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 				}
 				else{
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, null);
-					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 				}
 			}
 			Expression joinCondition = currJoin.getOnExpression();
 			if(joinCondition != null){
 				if(finalJoinedOperator == null){
 					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, joinCondition);
-					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 				}
 				else{
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, joinCondition);
-					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 				}				
 			}
 		}
@@ -207,6 +215,16 @@ public class Util {
 			}
 			return true;
 		}
+		else if(currLeft instanceof Column && currRight instanceof Column){
+			String leftTableName = ((Column)currLeft).getTable().getName();
+			String rightTableName = ((Column)currRight).getTable().getName();
+			if(leftTableName == null && rightTableName == null){
+				return true;
+			}
+			else if(leftTableName.equalsIgnoreCase(rightTableName)){
+				return true;
+			}
+		}
 		return false;		
 	}
 	
@@ -250,8 +268,11 @@ public class Util {
 	 * @param whereCondExpressions
 	 * @return
 	 */
-	public static ArrayList<Expression> getConditionsOfJoin(ColumnInfo[] schema1, ColumnInfo[] schema2, ArrayList<Expression> whereCondExpressions){
-		ArrayList<Expression> output = new ArrayList<>();
+	public static Object[] getConditionsOfJoin(ColumnInfo[] schema1, ColumnInfo[] schema2, ArrayList<Expression> whereCondExpressions){
+		//joinExp variable contains the join expressions like R.C=S.C 
+		ArrayList<Expression> joinExp = new ArrayList<>();
+		//Here we are maintaining column indexes of join expressions. If the join condition is like R.C=S.B then we fetch the indexes of C from table R, B from table S 
+		ArrayList<Integer[]> joinExpIndexes = new ArrayList<>();
 		Iterator<Expression> iterator = whereCondExpressions.iterator();
 		while(iterator.hasNext()){
 			Expression currExp = iterator.next();
@@ -265,6 +286,7 @@ public class Util {
 			}
 			Column leftColumn = (Column) leftExp;
 			Column rightColumn = (Column) rightExp;
+			Integer[] currExpIndexes = new Integer[2];
 			for (int i=0; i<schema1.length; i++) {
 				if (schema1[i].colDef.getColumnName().equals(leftColumn.getColumnName())) {
 					if(leftColumn.getTable().getName() != null){
@@ -279,7 +301,10 @@ public class Util {
 									continue;
 								}						
 							}							
-							output.add(currExp);
+							joinExp.add(currExp);
+							currExpIndexes[0] = i;
+							currExpIndexes[1] = j;
+							joinExpIndexes.add(currExpIndexes);
 							iterator.remove();
 							break;
 						}
@@ -298,7 +323,10 @@ public class Util {
 									continue;
 								}						
 							}							
-							output.add(currExp);
+							joinExp.add(currExp);
+							currExpIndexes[0] = i;
+							currExpIndexes[1] = j;
+							joinExpIndexes.add(currExpIndexes);
 							iterator.remove();
 							break;
 						}
@@ -306,6 +334,6 @@ public class Util {
 				}
 			}
 		}
-		return output;
+		return new Object[]{joinExp, joinExpIndexes};
 	}
 }
