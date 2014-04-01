@@ -61,6 +61,7 @@ public class ScanOperator implements Operator {
 	@Override
 	public void reset() {
 		try {
+			input.close();
 			input = new BufferedReader(new FileReader(f));
 		} catch (IOException e) {
 			e.printStackTrace();
