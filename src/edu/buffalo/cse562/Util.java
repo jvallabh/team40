@@ -51,7 +51,7 @@ public class Util {
 		
 	}
 	
-	public static Operator getJoinedOperator(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables){
+	public static Operator getJoinedOperator(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
 		JoinOperator finalJoinedOperator = null;
 		for(Join currJoin:joinDetails){
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
@@ -61,18 +61,22 @@ public class Util {
 			if(currJoin.isSimple()){
 				if(finalJoinedOperator == null){
 					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, null);
+					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
 				}
 				else{
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, null);
+					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
 				}
 			}
 			Expression joinCondition = currJoin.getOnExpression();
 			if(joinCondition != null){
 				if(finalJoinedOperator == null){
 					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, joinCondition);
+					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
 				}
 				else{
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, joinCondition);
+					finalJoinedOperator.whereJoinCondition = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
 				}				
 			}
 		}
@@ -228,6 +232,74 @@ public class Util {
 					}
 					output.add(currExp);
 					break;
+				}
+			}
+		}
+		return output;
+	}
+	
+	/**
+	 * This method can be used in converting cross product to a join.
+	 * SELECT * FROM R,S WHERE R.B=S.B AND R.B=(S.B+0.2);
+	 * schema1, schema2 are schemas of R,S.
+	 * whereCondExpressions are [R.B=S.B, R.B=(S.B+0.2)]
+	 * This method will return [R.B=S.B] as output.
+	 * We are selecting expressions of form ColumnLeft = ColumnRight. First we look for ColumnLeft/ColumnRight in schema1, if we find one then we look for ColumnRight/ColumnLeft in schema2.  
+	 * @param schema1
+	 * @param schema2
+	 * @param whereCondExpressions
+	 * @return
+	 */
+	public static ArrayList<Expression> getConditionsOfJoin(ColumnInfo[] schema1, ColumnInfo[] schema2, ArrayList<Expression> whereCondExpressions){
+		ArrayList<Expression> output = new ArrayList<>();
+		Iterator<Expression> iterator = whereCondExpressions.iterator();
+		while(iterator.hasNext()){
+			Expression currExp = iterator.next();
+			Expression leftExp = ((BinaryExpression)currExp).getLeftExpression();
+			Expression rightExp = ((BinaryExpression)currExp).getRightExpression();
+			if(!(leftExp instanceof Column && rightExp instanceof Column)){
+				continue;
+			}
+			Column leftColumn = (Column) leftExp;
+			Column rightColumn = (Column) rightExp;
+			for (int i=0; i<schema1.length; i++) {
+				if (schema1[i].colDef.getColumnName().equals(leftColumn.getColumnName())) {
+					if(leftColumn.getTable().getName() != null){
+						if(!leftColumn.getTable().getName().equals(schema1[i].tableName)){
+							continue;
+						}						
+					}
+					for (int j=0; j<schema2.length; j++) {
+						if (schema2[j].colDef.getColumnName().equals(rightColumn.getColumnName())) {
+							if(rightColumn.getTable().getName() != null){
+								if(!rightColumn.getTable().getName().equals(schema2[j].tableName)){
+									continue;
+								}						
+							}							
+							output.add(currExp);
+							iterator.remove();
+							break;
+						}
+					}
+				}
+				else if (schema1[i].colDef.getColumnName().equals(rightColumn.getColumnName())) {
+					if(rightColumn.getTable().getName() != null){
+						if(!rightColumn.getTable().getName().equals(schema1[i].tableName)){
+							continue;
+						}						
+					}
+					for (int j=0; j<schema2.length; j++) {
+						if (schema2[j].colDef.getColumnName().equals(leftColumn.getColumnName())) {
+							if(leftColumn.getTable().getName() != null){
+								if(!leftColumn.getTable().getName().equals(schema2[j].tableName)){
+									continue;
+								}						
+							}							
+							output.add(currExp);
+							iterator.remove();
+							break;
+						}
+					}
 				}
 			}
 		}

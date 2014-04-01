@@ -3,6 +3,8 @@
  */
 package edu.buffalo.cse562;
 
+import java.util.ArrayList;
+
 import net.sf.jsqlparser.expression.Expression;
 
 /**
@@ -21,6 +23,7 @@ public class JoinOperator implements Operator {
 	Datum[] tuple1 =null;
 	Datum[] tuple2 =null;
 	boolean active = false;
+	ArrayList<Expression> whereJoinCondition;
 	
 	public JoinOperator(Operator input1, Operator input2, Expression condition){
 		this.input1 = input1;
