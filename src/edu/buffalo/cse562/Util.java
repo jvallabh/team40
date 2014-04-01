@@ -255,6 +255,9 @@ public class Util {
 		Iterator<Expression> iterator = whereCondExpressions.iterator();
 		while(iterator.hasNext()){
 			Expression currExp = iterator.next();
+			if(!(currExp instanceof BinaryExpression)){
+				continue;
+			}
 			Expression leftExp = ((BinaryExpression)currExp).getLeftExpression();
 			Expression rightExp = ((BinaryExpression)currExp).getRightExpression();
 			if(!(leftExp instanceof Column && rightExp instanceof Column)){

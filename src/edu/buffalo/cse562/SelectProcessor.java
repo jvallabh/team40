@@ -43,7 +43,11 @@ public class SelectProcessor {
 		FromScanner fromscan = new FromScanner(Main.dataDir, Main.tables);
 		pselect.getFromItem().accept(fromscan);
 		Operator firstTableOperator = fromscan.source;
-		((ScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
+		
+		//Incase of subSelect, we will get final resultant operator like project operator.
+		if(firstTableOperator instanceof ScanOperator){
+			((ScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
+		}		
 									
 		/*
 		 * If JOIN is present in the SQL query then first we are fetching the list of JOIN tables.
