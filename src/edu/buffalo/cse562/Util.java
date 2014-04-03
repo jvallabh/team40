@@ -22,6 +22,7 @@ import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.Join;
+import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.SelectBody;
 import net.sf.jsqlparser.statement.select.SubSelect;
@@ -83,6 +84,7 @@ public class Util {
 					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
 				}
 				else{
 					ColumnInfo[] schema1 = finalJoinedOperator.getSchema();
@@ -90,6 +92,7 @@ public class Util {
 					Object[] whereJoinConditionDetails = getConditionsOfJoin(schema1, tempTableOperator.getSchema(), whereCondExpressions);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
 				}
 			}
 			Expression joinCondition = currJoin.getOnExpression();
@@ -99,12 +102,14 @@ public class Util {
 					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
 				}
 				else{
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, joinCondition);
 					Object[] whereJoinConditionDetails = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
 				}				
 			}
 		}
@@ -112,7 +117,11 @@ public class Util {
 	}
 	
 	public static Operator getGroupByOperator(Operator inputOperator, List<Column> groupByColumns){
-		GroupByOperator finalGrpByOperator = null;
+		//OrderByOperator needs columns to be in the form of OrderByElement object. So, we are using a helper method for conversion. 
+		List<OrderByElement> orderByElements = convertGrpByColumnsToOrderByElements(groupByColumns);
+		return new OrderByOperator(inputOperator, orderByElements);
+		//Commented out below piece of code as we decided to use orderBy operator logic for group by as well.
+		/*GroupByOperator finalGrpByOperator = null;
 		for(Column currColumn:groupByColumns){
 			if(finalGrpByOperator == null){
 				finalGrpByOperator = new GroupByOperator(inputOperator, currColumn, inputOperator.getSchema());
@@ -121,7 +130,7 @@ public class Util {
 				finalGrpByOperator = new GroupByOperator(finalGrpByOperator, currColumn, finalGrpByOperator.getSchema());
 			}			
 		}
-		return finalGrpByOperator;
+		return finalGrpByOperator;*/
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -353,5 +362,23 @@ public class Util {
 			}
 		}
 		return new Object[]{joinExp, joinExpIndexes};
+	}
+	
+	/**
+	 * This method converts a list of columns into a list of OrderByElements
+	 * @param grpByCols
+	 * @return
+	 */
+	public static List<OrderByElement> convertGrpByColumnsToOrderByElements(List<Column> grpByCols){
+		List<OrderByElement> orderByElements = new ArrayList<>();
+		Iterator<Column> iterator = grpByCols.iterator();
+		OrderByElement orderByElement = null;
+		while(iterator.hasNext()){
+			orderByElement = new OrderByElement();
+			orderByElement.setExpression(iterator.next());
+			orderByElement.setAsc(true);
+			orderByElements.add(orderByElement);
+		}
+		return orderByElements;
 	}
 }

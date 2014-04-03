@@ -64,11 +64,11 @@ public class JoinOperator implements Operator {
 	
 	@Override
 	public Datum[] readOneTuple() {
-		if (!isHashed)
+		/*if (!isHashed)
 		{ 
 			buildHash();
 			isHashed = true;
-		}
+		}*/
 		Datum[] tuple3 = null;
 		do {
 			if(iter==null)

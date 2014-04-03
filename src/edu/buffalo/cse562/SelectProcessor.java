@@ -60,7 +60,7 @@ public class SelectProcessor {
 		
 		List<Column> groupByColumns = pselect.getGroupByColumnReferences();
 		boolean hasGroupBy = groupByColumns == null?false:true;
-		GroupByOperator finalGrpByOperator = null;
+		Operator finalGrpByOperator = null;
 		
 		List<OrderByElement> orderByColumns = pselect.getOrderByElements();
 		boolean hasOrderBy = orderByColumns == null?false:true;
@@ -85,7 +85,7 @@ public class SelectProcessor {
 		projectOperator = new ProjectionOperator(selectOperator,selectOperator.getSchema(),selectItems);
 		
 		if(hasGroupBy){
-			finalGrpByOperator = (GroupByOperator) Util.getGroupByOperator(projectOperator, groupByColumns);
+			finalGrpByOperator = Util.getGroupByOperator(projectOperator, groupByColumns);
 		}
 		Operator inputToAggr = finalGrpByOperator!=null?finalGrpByOperator:projectOperator;
 
@@ -105,7 +105,7 @@ public class SelectProcessor {
 		
 		
 		if(hasGroupBy && hasOrderBy){
-			finalOperator = (GroupByOperator) Util.getGroupByOperator(finalOperator, groupByColumns);
+			finalOperator = Util.getGroupByOperator(finalOperator, groupByColumns);
 		}
 		return (Operator) finalOperator;		
   }	
