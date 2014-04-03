@@ -11,6 +11,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.select.Distinct;
 import net.sf.jsqlparser.statement.select.Join;
 import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
@@ -65,6 +66,11 @@ public class SelectProcessor {
 		boolean hasOrderBy = orderByColumns == null?false:true;
 		OrderByOperator finalOrderByOperator = null;
 		
+		Distinct distinct = pselect.getDistinct();
+		boolean hasDistinct = distinct == null?false:true;
+		
+		DistinctOperator distinctOperator = null;
+		
 		SelectionOperator selectOperator = null;
 		ProjectionOperator projectOperator = null;
 		
@@ -89,6 +95,13 @@ public class SelectProcessor {
 			finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
 		}
 		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
+		
+		if(hasDistinct){
+			List<SelectItem> distinctColumns = distinct.getOnSelectItems();
+			distinctOperator = new DistinctOperator(finalOperator, distinctColumns);
+		}
+		
+		finalOperator = distinctOperator != null?distinctOperator:finalOrderByOperator;
 		
 		if(hasGroupBy && hasOrderBy){
 			finalOperator = (GroupByOperator) Util.getGroupByOperator(finalOperator, groupByColumns);
