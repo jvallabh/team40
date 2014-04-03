@@ -45,6 +45,25 @@ public class JoinOperator implements Operator {
 	{
 		ind1 = whereJoinIndexes.get(0)[0];
 		ind2 = whereJoinIndexes.get(0)[1];
+		Datum[] tuple3 = input2.readOneTuple();
+		while(tuple3!=null)
+		{
+			if(map.containsKey(tuple3[ind2].element)) {
+		        //Add to existing list
+		        map.get(tuple3[ind2].element).add(tuple3);
+
+		    } else {
+		        //Create new list
+		        List<Datum[]> tuples = new ArrayList<Datum[]>();
+		        tuples.add(tuple3);
+		        map.put(tuple3[ind2].element, tuples);
+		    }
+		  tuple3 = input2.readOneTuple();
+		}
+		
+
+		/*ind1 = whereJoinIndexes.get(0)[0];
+		ind2 = whereJoinIndexes.get(0)[1];
 		Datum[] tuple3 = input1.readOneTuple();
 		while(tuple3!=null)
 		{
@@ -59,7 +78,7 @@ public class JoinOperator implements Operator {
 		        map.put(tuple3[ind1].element, tuples);
 		    }
 		  tuple3 = input1.readOneTuple();
-		}
+		}*/
 	}
 	
 	@Override
@@ -73,14 +92,14 @@ public class JoinOperator implements Operator {
 		do {
 			if(iter==null)
 			{
-				tuple1 = input2.readOneTuple();
+				tuple1 = input1.readOneTuple();
 				if(tuple1==null)
 					return null;
-				if(!map.containsKey(tuple1[ind2].element))
+				if(!map.containsKey(tuple1[ind1].element))
 					continue;
 				else
 				{
-					iter =  map.get(tuple1[ind2].element).iterator();
+					iter =  map.get(tuple1[ind1].element).iterator();
 					if(iter.hasNext())
 					{
 						tuple3 = getTuple(iter.next(),tuple1);
