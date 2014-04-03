@@ -102,7 +102,7 @@ public class JoinOperator implements Operator {
 					iter =  map.get(tuple1[ind1].element).iterator();
 					if(iter.hasNext())
 					{
-						tuple3 = getTuple(iter.next(),tuple1);
+						tuple3 = getTuple(tuple1, iter.next());
 				        return tuple3;
 					}
 					else
@@ -113,7 +113,7 @@ public class JoinOperator implements Operator {
 			{
 				if(iter.hasNext())
 				{
-					tuple3 = getTuple(iter.next(),tuple1);
+					tuple3 = getTuple(tuple1, iter.next());
 			        return tuple3;
 				}
 				else
