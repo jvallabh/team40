@@ -27,9 +27,9 @@ public class SortableTuple implements Comparator<SortableTuple> {
 			if(colDataType.equalsIgnoreCase("int")){
 				x  = orderIndex[j]*Integer.compare(Integer.parseInt(arg0.tuple[i].element),Integer.parseInt(arg1.tuple[i].element));
 			}				 
-			/*if(colDataType.equalsIgnoreCase("double")){
+			if(colDataType.equalsIgnoreCase("double")){
 				x  =orderIndex[j]*arg0.tuple[i].toString().compareTo(arg1.tuple[i].element);
-			}*/				 
+			}				 
 			if(colDataType.equalsIgnoreCase("string")){
 				x  =orderIndex[j]*arg0.tuple[i].toString().compareTo(arg1.tuple[i].element);
 			}				 
