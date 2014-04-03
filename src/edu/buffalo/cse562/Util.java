@@ -66,8 +66,9 @@ public class Util {
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 				}
 				else{
+					ColumnInfo[] schema1 = finalJoinedOperator.getSchema();
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, null);
-					Object[] whereJoinConditionDetails = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(schema1, tempTableOperator.getSchema(), whereCondExpressions);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 				}
@@ -290,46 +291,44 @@ public class Util {
 			for (int i=0; i<schema1.length; i++) {
 				if (schema1[i].colDef.getColumnName().equals(leftColumn.getColumnName())) {
 					if(leftColumn.getTable().getName() != null){
-						if(!leftColumn.getTable().getName().equals(schema1[i].tableName)){
-							continue;
+						if(leftColumn.getTable().getName().equals(schema1[i].tableName)){
+							for (int j=0; j<schema2.length; j++) {
+								if (schema2[j].colDef.getColumnName().equals(rightColumn.getColumnName())) {
+									if(rightColumn.getTable().getName() != null){
+										if(!rightColumn.getTable().getName().equals(schema2[j].tableName)){
+											continue;
+										}						
+									}							
+									joinExp.add(currExp);
+									currExpIndexes[0] = i;
+									currExpIndexes[1] = j;
+									joinExpIndexes.add(currExpIndexes);
+									iterator.remove();
+									break;
+								}
+							}
 						}						
-					}
-					for (int j=0; j<schema2.length; j++) {
-						if (schema2[j].colDef.getColumnName().equals(rightColumn.getColumnName())) {
-							if(rightColumn.getTable().getName() != null){
-								if(!rightColumn.getTable().getName().equals(schema2[j].tableName)){
-									continue;
-								}						
-							}							
-							joinExp.add(currExp);
-							currExpIndexes[0] = i;
-							currExpIndexes[1] = j;
-							joinExpIndexes.add(currExpIndexes);
-							iterator.remove();
-							break;
-						}
 					}
 				}
-				else if (schema1[i].colDef.getColumnName().equals(rightColumn.getColumnName())) {
+				if (schema1[i].colDef.getColumnName().equals(rightColumn.getColumnName())) {
 					if(rightColumn.getTable().getName() != null){
-						if(!rightColumn.getTable().getName().equals(schema1[i].tableName)){
-							continue;
+						if(rightColumn.getTable().getName().equals(schema1[i].tableName)){
+							for (int j=0; j<schema2.length; j++) {
+								if (schema2[j].colDef.getColumnName().equals(leftColumn.getColumnName())) {
+									if(leftColumn.getTable().getName() != null){
+										if(!leftColumn.getTable().getName().equals(schema2[j].tableName)){
+											continue;
+										}						
+									}							
+									joinExp.add(currExp);
+									currExpIndexes[0] = i;
+									currExpIndexes[1] = j;
+									joinExpIndexes.add(currExpIndexes);
+									iterator.remove();
+									break;
+								}
+							}
 						}						
-					}
-					for (int j=0; j<schema2.length; j++) {
-						if (schema2[j].colDef.getColumnName().equals(leftColumn.getColumnName())) {
-							if(leftColumn.getTable().getName() != null){
-								if(!leftColumn.getTable().getName().equals(schema2[j].tableName)){
-									continue;
-								}						
-							}							
-							joinExp.add(currExp);
-							currExpIndexes[0] = i;
-							currExpIndexes[1] = j;
-							joinExpIndexes.add(currExpIndexes);
-							iterator.remove();
-							break;
-						}
 					}
 				}
 			}
