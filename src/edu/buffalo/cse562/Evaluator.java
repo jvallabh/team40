@@ -82,7 +82,7 @@ public class Evaluator implements ExpressionVisitor {
 		HashMap colHash = new HashMap<>();
 		for (int i=0; i<schema.length; i++) {
 			colHash.put(schema[i].colDef.getColumnName(), i);
-			colHash.put(schema[i].tableName + schema[i].colDef.getColumnName(), colHash);
+			colHash.put(schema[i].tableName + schema[i].colDef.getColumnName(), i);
 		}
 		return colHash;
 	}
