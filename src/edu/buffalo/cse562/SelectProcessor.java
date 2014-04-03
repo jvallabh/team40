@@ -104,9 +104,9 @@ public class SelectProcessor {
 		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
 		
 		
-		if(hasGroupBy && hasOrderBy){
+		/*if(hasGroupBy && hasOrderBy){
 			finalOperator = Util.getGroupByOperator(finalOperator, groupByColumns);
-		}
+		}*/
 		return (Operator) finalOperator;		
   }	
 	
