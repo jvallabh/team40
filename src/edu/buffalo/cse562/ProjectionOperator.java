@@ -141,7 +141,7 @@ public class ProjectionOperator implements Operator {
 					colDef.setColumnName(exp.getAlias());
 				}
 				else {
-					colDef.setColumnName(exp.toString());
+					colDef.setColumnName(((Column)exp.getExpression()).getColumnName());
 				}
 				colDef.setColDataType(getNumType(exp.getExpression()));
 				if(exp.getExpression() instanceof Function) {

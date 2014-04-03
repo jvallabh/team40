@@ -47,10 +47,20 @@ public class DistinctOperator implements Operator {
 		for(int i=0;i<selectItems.size();i++){
 			exp = (SelectExpressionItem)selectItems.get(i);
 			col = (Column) exp.getExpression();
-			for (int j=0; i<schema.length; i++) {
-				if (schema[j].colDef.getColumnName().equalsIgnoreCase(col.getColumnName())) {
-					columnIds.add(j);
-					break;
+			if(col.getTable().getName()!=null) {
+				for (int j=0; j<schema.length; j++) {
+					if (schema[j].colDef.getColumnName().equalsIgnoreCase(col.getColumnName())&&schema[j].tableName.equalsIgnoreCase(col.getTable().toString())) {
+						columnIds.add(j);
+						break;
+					}
+				}
+			}
+			else {
+				for (int j=0; j<schema.length; j++) {
+					if (schema[j].colDef.getColumnName().equalsIgnoreCase(col.getColumnName())) {
+						columnIds.add(j);
+						break;
+					}
 				}
 			}
 		}
