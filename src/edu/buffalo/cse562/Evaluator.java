@@ -66,9 +66,28 @@ public class Evaluator implements ExpressionVisitor {
 	boolean result;
 	String value;
 	static List distinctList = new ArrayList<>();
+	HashMap<String, Integer> colHash; 
 	
 	public Evaluator(ColumnInfo[] schema, Datum[] tuple) {
 		this.schema = schema;
+		this.tuple = tuple;
+	}
+	
+	public Evaluator(ColumnInfo[] schema) {
+		this.schema = schema;
+		this.colHash = createHash();
+	}
+	
+	public HashMap createHash() {
+		HashMap colHash = new HashMap<>();
+		for (int i=0; i<schema.length; i++) {
+			colHash.put(schema[i].colDef.getColumnName(), i);
+			colHash.put(schema[i].tableName + schema[i].colDef.getColumnName(), colHash);
+		}
+		return colHash;
+	}
+	
+	public void sendTuple (Datum[] tuple) {
 		this.tuple = tuple;
 	}
 	
@@ -120,10 +139,8 @@ public class Evaluator implements ExpressionVisitor {
 				 break;
 			}
 			
-			return;
-			
+			return;	
 		}
-		
 	}
 
 	@Override
@@ -388,19 +405,21 @@ public class Evaluator implements ExpressionVisitor {
 	
 	public int getColumnID(Column col) {
 		if (col.getTable().getName() == null) {
-			for (int i=0; i<schema.length; i++) {
+			return colHash.get(col.getColumnName());
+			/*for (int i=0; i<schema.length; i++) {
 				if (schema[i].colDef.getColumnName().equals(col.getColumnName())) {
 					return i;
 				}
-			}
+			}*/
 		} else {
-			for (int i=0; i<schema.length; i++) {
+			return colHash.get(col.getTable()+ col.getColumnName());
+			/*for (int i=0; i<schema.length; i++) {
 				if ((schema[i].colDef.getColumnName().equals(col.getColumnName())) && (schema[i].tableName.equals(col.getTable().getName()))) {
 					return i;
 				}
-			}	
+			}*/	
 		}
-		return -1;
+		//return -1;
 	}
 	
 	@Override
