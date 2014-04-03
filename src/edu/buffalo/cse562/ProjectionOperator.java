@@ -38,12 +38,14 @@ public class ProjectionOperator implements Operator {
 	ArrayList<Integer> itemList = new ArrayList<>();
 	ColumnInfo[] finalSchema;
 	private static int sum=1,avg=2,count=3,min=4,max=5;
+	Evaluator eval;
 	
 	public ProjectionOperator(Operator input, ColumnInfo[] schema, List<SelectItem> selectItems) {
 		this.input = input;
 		this.schema = schema;
 		this.selectItems = selectItems;
 		this.finalSchema = changeSchema(selectItems);
+		this.eval = new Evaluator(schema);
 	}
 	
 	public int getColumnID(Column col) {
@@ -186,7 +188,7 @@ public class ProjectionOperator implements Operator {
 		else {			
 			SelectExpressionItem selectExp;
 			Expression exp = null;
-			Evaluator eval = new Evaluator(schema, tuple);
+			eval.sendTuple(tuple);
 			for (int j=0; j<selectItems.size(); j++) {
 				selectExp = (SelectExpressionItem)selectItems.get(j);
 				exp = selectExp.getExpression();
