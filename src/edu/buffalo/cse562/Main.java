@@ -43,6 +43,7 @@ public class Main {
 			}
 			else if(args[i].equals("--swap")) {
 				swapDir = new String(args[i+1]);
+				i++;
 			}
 			else{
 				sqlFiles.add(new File(args[i]));
