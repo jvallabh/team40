@@ -186,10 +186,10 @@ public class ProjectionOperator implements Operator {
 		else {			
 			SelectExpressionItem selectExp;
 			Expression exp = null;
+			Evaluator eval = new Evaluator(schema, tuple);
 			for (int j=0; j<selectItems.size(); j++) {
 				selectExp = (SelectExpressionItem)selectItems.get(j);
 				exp = selectExp.getExpression();
-				Evaluator eval = new Evaluator(schema, tuple);
 				exp.accept(eval);
 				tupleList.add(new Datum(eval.getValue()));
 			}
