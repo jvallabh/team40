@@ -30,7 +30,7 @@ public class SortableTuple implements Comparator<SortableTuple> {
 			if(colDataType.equalsIgnoreCase("double")){
 				x  =orderIndex[j]*arg0.tuple[i].toString().compareTo(arg1.tuple[i].element);
 			}				 
-			if(colDataType.equalsIgnoreCase("string")){
+			if(colDataType.equalsIgnoreCase("string") || colDataType.equalsIgnoreCase("VARCHAR")){
 				x  =orderIndex[j]*arg0.tuple[i].toString().compareTo(arg1.tuple[i].element);
 			}				 
 			if(colDataType.equalsIgnoreCase("date")){
