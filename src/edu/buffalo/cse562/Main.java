@@ -5,10 +5,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
+import net.sf.jsqlparser.statement.select.Limit;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
@@ -24,7 +27,6 @@ import net.sf.jsqlparser.statement.select.SelectBody;
 public class Main {
 	public static File dataDir;
 	public static HashMap<String, CreateTable> tables;
-	public static File swapDir;
 
 	/**
 	 * @param args
@@ -36,10 +38,6 @@ public class Main {
 		for(i=0;i<args.length;i++){
 			if(args[i].equals("--data")){
 				dataDir = new File(args[i+1]);
-				i++;
-			}
-			else if(args[i].equals("--swap")) {
-				swapDir = new File(args[i+1]);
 				i++;
 			}
 			else{
@@ -64,7 +62,15 @@ public class Main {
 						if(select instanceof PlainSelect){
 							PlainSelect pselect = (PlainSelect)select;
 							Operator resultOperator = SelectProcessor.processPlainSelect(pselect);
-							Util.printOutputTuples(resultOperator);					
+							
+							Limit limit = pselect.getLimit();
+							boolean hasLimit = limit == null?false:true;
+							if(hasLimit){
+								Util.printOutputTuples(resultOperator, (int) limit.getRowCount());
+							}
+							else{
+								Util.printOutputTuples(resultOperator);
+							}												
 						}							
 					}
 				}

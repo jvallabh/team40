@@ -51,6 +51,25 @@ public class Util {
 		
 	}
 	
+	/**
+	 * Reads tuples from the inputOperator and prints it to the console
+	 * @param inputOperator - operator to read tuples from
+	 * @param count - limit on the number of tuples to print
+	 */
+	public static void printOutputTuples(Operator inputOperator, int count){
+		Datum[] currTuple = null;
+		int output = 0;
+		while(output < count && (currTuple = inputOperator.readOneTuple()) != null){
+			String currDatumString = "";
+			for(Datum currDatum:currTuple){
+				currDatumString = currDatumString+"|"+currDatum;
+			}
+			System.out.println(currDatumString.substring(1));
+			output++;
+		}
+		
+	}
+	
 	public static Operator getJoinedOperator(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
 		JoinOperator finalJoinedOperator = null;
 		for(Join currJoin:joinDetails){
