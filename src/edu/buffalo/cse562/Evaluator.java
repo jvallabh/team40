@@ -5,7 +5,10 @@ import java.text.SimpleDateFormat;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.sql.Date;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import net.sf.jsqlparser.expression.AllComparisonExpression;
@@ -50,8 +53,10 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.select.Distinct;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SubSelect;
 
 public class Evaluator implements ExpressionVisitor {
@@ -60,6 +65,7 @@ public class Evaluator implements ExpressionVisitor {
 	Datum[] tuple;
 	boolean result;
 	String value;
+	static List distinctList = new ArrayList<>();
 	
 	public Evaluator(ColumnInfo[] schema, Datum[] tuple) {
 		this.schema = schema;
@@ -88,8 +94,23 @@ public class Evaluator implements ExpressionVisitor {
 	public void visit(Function arg0) {
 		if(arg0 instanceof Function) {
 			Function aggFunc = (Function) arg0;
-			if(arg0.getName().equalsIgnoreCase("COUNT")){	
+			if(arg0.getName().equalsIgnoreCase("COUNT")){
 				value = "1";
+				if(arg0.isDistinct()) {
+					ExpressionList expList = arg0.getParameters();
+					List<Expression> exps = expList.getExpressions();
+					StringBuilder sb= new StringBuilder();
+					Column col=null;
+					for(Expression e:exps){
+						col = (Column) e;
+						sb.append(tuple[getColumnID(col)]);
+					}
+					if(distinctList.contains(sb.toString()))
+						value="0";
+					else
+						distinctList.add(sb.toString());
+					sb.delete(0, sb.length());
+				}
 				return;
 			}
 			ExpressionList expList = aggFunc.getParameters();
@@ -624,7 +645,7 @@ public class Evaluator implements ExpressionVisitor {
 		int colID = getColumnID(col);
 		value = tuple[colID].String();
 	}
-
+	
 	@Override
 	public void visit(SubSelect arg0) {
 		// TODO Auto-generated method stub
