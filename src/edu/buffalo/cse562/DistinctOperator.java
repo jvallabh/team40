@@ -77,8 +77,7 @@ public class DistinctOperator implements Operator {
 
 	@Override
 	public ColumnInfo[] getSchema() {
-		// TODO Auto-generated method stub
-		return null;
+		return input.getSchema();
 	}
 
 }

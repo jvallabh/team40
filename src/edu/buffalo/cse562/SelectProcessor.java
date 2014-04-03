@@ -87,21 +87,22 @@ public class SelectProcessor {
 		if(hasGroupBy){
 			finalGrpByOperator = (GroupByOperator) Util.getGroupByOperator(projectOperator, groupByColumns);
 		}
-		Operator intputToAggr = finalGrpByOperator!=null?finalGrpByOperator:projectOperator;
+		Operator inputToAggr = finalGrpByOperator!=null?finalGrpByOperator:projectOperator;
 
-		AggrOperator aggrOperator = new AggrOperator(intputToAggr,intputToAggr.getSchema(),selectItems);
+		if(hasDistinct){
+			List<SelectItem> distinctColumns = distinct.getOnSelectItems();
+			distinctOperator = new DistinctOperator(inputToAggr, distinctColumns);
+		}
+		
+		inputToAggr = distinctOperator != null?distinctOperator:inputToAggr;
+		
+		AggrOperator aggrOperator = new AggrOperator(inputToAggr,inputToAggr.getSchema(),selectItems);
 		
 		if(hasOrderBy){
 			finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
 		}
 		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
 		
-		if(hasDistinct){
-			List<SelectItem> distinctColumns = distinct.getOnSelectItems();
-			distinctOperator = new DistinctOperator(finalOperator, distinctColumns);
-		}
-		
-		finalOperator = distinctOperator != null?distinctOperator:finalOrderByOperator;
 		
 		if(hasGroupBy && hasOrderBy){
 			finalOperator = (GroupByOperator) Util.getGroupByOperator(finalOperator, groupByColumns);
