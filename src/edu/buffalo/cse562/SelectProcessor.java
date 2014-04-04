@@ -8,6 +8,8 @@ import java.util.Iterator;
 import java.util.List;
 
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.Function;
+import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
@@ -59,6 +61,21 @@ public class SelectProcessor {
 		JoinOperator finalJoinedOperator = null;
 		
 		List<Column> groupByColumns = pselect.getGroupByColumnReferences();
+		
+		for(SelectItem selectItem:selectItems){
+			if(selectItem instanceof Function) {
+				Function count = (Function) selectItem;
+				if(count.getName().equalsIgnoreCase("COUNT")){
+					if(count.isDistinct()) {
+						ExpressionList exp = count.getParameters();
+						List<Expression> expList = exp.getExpressions();
+						Column col = (Column)expList.get(0);
+						groupByColumns.add(col);
+					}
+				}
+			}
+		}
+		
 		boolean hasGroupBy = groupByColumns == null?false:true;
 		Operator finalGrpByOperator = null;
 		

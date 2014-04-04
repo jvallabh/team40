@@ -66,25 +66,23 @@ public class Evaluator implements ExpressionVisitor {
 	boolean result;
 	String value;
 	static List distinctList = new ArrayList<>();
-	HashMap<String, Integer> colHash; 
+	HashMap<String, Integer> colHash = new HashMap<>();
 	
 	public Evaluator(ColumnInfo[] schema, Datum[] tuple) {
 		this.schema = schema;
 		this.tuple = tuple;
+		for (int i=0; i<schema.length; i++) {
+			this.colHash.put(schema[i].colDef.getColumnName(), i);
+			this.colHash.put(schema[i].tableName + schema[i].colDef.getColumnName(), i);
+		}
 	}
 	
 	public Evaluator(ColumnInfo[] schema) {
 		this.schema = schema;
-		this.colHash = createHash();
-	}
-	
-	public HashMap createHash() {
-		HashMap colHash = new HashMap<>();
 		for (int i=0; i<schema.length; i++) {
-			colHash.put(schema[i].colDef.getColumnName(), i);
-			colHash.put(schema[i].tableName + schema[i].colDef.getColumnName(), i);
+			this.colHash.put(schema[i].colDef.getColumnName(), i);
+			this.colHash.put(schema[i].tableName + schema[i].colDef.getColumnName(), i);
 		}
-		return colHash;
 	}
 	
 	public void sendTuple (Datum[] tuple) {
@@ -122,16 +120,12 @@ public class Evaluator implements ExpressionVisitor {
 					Column col=null;
 					for(Expression e:exps){
 						col = (Column) e;
-						sb.append(tuple[getColumnID(col)]);
+						value = tuple[getColumnID(col)].toString();
 					}
-					if(distinctList.contains(sb.toString()))
-						value="0";
-					else
-						distinctList.add(sb.toString());
-					sb.delete(0, sb.length());
 				}
 				return;
 			}
+			
 			ExpressionList expList = aggFunc.getParameters();
 			Column expCol = null;
 			for (Iterator iter = expList.getExpressions().iterator(); iter.hasNext();) {
