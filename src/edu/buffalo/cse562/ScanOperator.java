@@ -41,24 +41,25 @@ public class ScanOperator implements Operator {
 	public Datum[] readOneTuple() {
 		if (input == null) return null;
 		String line = null;
-		try {
-			line = input.readLine();
-		} catch(IOException e) {
-			e.printStackTrace();
+		Datum[] ret = null;
+		while(true){
+			try {
+				line = input.readLine();
+			} catch(IOException e) {
+				e.printStackTrace();
+			}
+			if (line == null) return null;
+			String[] cols = line.split("\\|");
+			ret = new Datum[cols.length];
+			for (int i=0; i<cols.length; i++) {
+				//ret[i] = new Datum.Long(cols[i]);
+				ret[i] = new Datum(cols[i]);
+			}
+			if(evaluateTuple(ret)){
+				break;
+			}			
 		}
-		if (line == null) return null;
-		String[] cols = line.split("\\|");
-		Datum[] ret = new Datum[cols.length];
-		for (int i=0; i<cols.length; i++) {
-			//ret[i] = new Datum.Long(cols[i]);
-			ret[i] = new Datum(cols[i]);
-		}
-		if(evaluateTuple(ret)){
-			return ret;
-		}
-		else{
-			return readOneTuple();
-		}
+		return ret;
 	}
 
 
