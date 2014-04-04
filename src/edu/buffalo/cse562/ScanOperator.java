@@ -26,11 +26,15 @@ public class ScanOperator implements Operator {
 	File f;
 	ColumnInfo[] schema;
 	ArrayList<Expression> conditions;
+	Evaluator eval;
+	Iterator<Expression> iterator;
+	Expression currCondition;
 	
 	public ScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
 		this.schema = schema;
 		reset(); 
+		this.eval = new Evaluator(schema);
 	}
 	
 	@Override
@@ -80,10 +84,10 @@ public class ScanOperator implements Operator {
 	private boolean evaluateTuple(Datum[] tuple){
 		boolean result = true;
 		if(conditions.size() != 0){
-			Iterator<Expression> iterator = conditions.iterator();
+			iterator = conditions.iterator();
 			while(iterator.hasNext()){
-				Expression currCondition = iterator.next();				
-				Evaluator eval = new Evaluator(schema, tuple);
+				currCondition = iterator.next();				
+				eval.sendTuple(tuple);
 				currCondition.accept(eval);
 					if (!(eval.getBool())) {
 						result = false;
