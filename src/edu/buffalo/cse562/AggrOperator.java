@@ -83,7 +83,7 @@ public class AggrOperator implements Operator {
 			tuple[i].element = Double.toString((Double.parseDouble(tuple[i].toString())*1000.0) /(resultCount*1000.0));
 			if(selectItemType[i]==distinct){
 				
-				tuple[i].element = new String(Integer.toString(distCount+1));
+				tuple[i].element = new String(Integer.toString(distCount));
 				distCount = 1;
 			}
 		}
