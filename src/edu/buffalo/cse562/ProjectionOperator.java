@@ -37,7 +37,7 @@ public class ProjectionOperator implements Operator {
 	List<SelectItem> selectItems;
 	ArrayList<Integer> itemList = new ArrayList<>();
 	ColumnInfo[] finalSchema;
-	private static int sum=1,avg=2,count=3,min=4,max=5;
+	private static int sum=1,avg=2,count=3,min=4,max=5,distinct=6;
 	Evaluator eval;
 	
 	public ProjectionOperator(Operator input, ColumnInfo[] schema, List<SelectItem> selectItems) {
@@ -125,8 +125,12 @@ public class ProjectionOperator implements Operator {
 	    		function =max;
 		else if(f.getName().toString().equalsIgnoreCase("AVG"))
 	    		function =avg;
-		else if(f.getName().toString().equalsIgnoreCase("COUNT"))
+		else if(f.getName().toString().equalsIgnoreCase("COUNT")){
 	    		function =count;
+				if(f.isDistinct())
+					function=distinct;
+		}
+    		
 	    return function;
 	}
 	public ColumnInfo[] changeSchema(List selectItems) {
