@@ -31,7 +31,9 @@ public class AggrOperator implements Operator {
 	int[] selectItemType;
 	int resultCount =0;
 	int tmpCount=0;
-	private static int sum=1,avg=2,count=3,min=4,max=5;
+	int distCount = 0;
+	String prevDatum = null;
+	private static int sum=1,avg=2,count=3,min=4,max=5,distinct=6;
 	public AggrOperator(Operator input, ColumnInfo[] schema, List<SelectItem> selectItems) {
 		this.input = input;
 		this.schema = schema;
@@ -78,6 +80,11 @@ public class AggrOperator implements Operator {
 		for (int i=0; i<tuple.length;i++) {
 			if(selectItemType[i]==avg)
 			tuple[i].element = Double.toString((Double.parseDouble(tuple[i].toString())*1000.0) /(resultCount*1000.0));
+			if(selectItemType[i]==distinct){
+				prevDatum = null;
+				tuple[i].element = new String(Integer.toString(distCount));
+				distCount = 0;
+			}
 		}
 		
 		return tuple;
@@ -94,6 +101,19 @@ public class AggrOperator implements Operator {
 			result[i].element = Math.getSum(result[i].toString(), tuple[i].toString(),i,schema); 
 			else if(selectItemType[i]==count)
 			result[i].element = Math.getSum(result[i].toString(), tuple[i].toString(),i,schema);
+			else if(selectItemType[i]==distinct)
+			{   
+				if(prevDatum == null)
+				{
+				distCount +=1;
+				}
+				else if(!prevDatum.contentEquals(tuple[i].toString()))
+				{
+					distCount +=1;
+				}
+				prevDatum = new String( tuple[i].toString());
+			}
+			
 		}
 	}
 	@Override
