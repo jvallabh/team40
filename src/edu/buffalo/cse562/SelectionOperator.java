@@ -22,11 +22,14 @@ public class SelectionOperator implements Operator {
 	Operator input;
 	ColumnInfo[] schema;
 	ArrayList<Expression> condition;
+	Evaluator eval;
+	Expression currExp;
 	
 	public SelectionOperator(Operator input, ColumnInfo[] schema, ArrayList<Expression> condition){
 		this.input = input;
 		this.condition = condition;
 		this.schema = schema;
+		this.eval = new Evaluator(schema);
 	}
 
 	@Override
@@ -36,11 +39,11 @@ public class SelectionOperator implements Operator {
 			tuple = input.readOneTuple();
 			if (tuple == null) return null;
 			
-			Evaluator eval = new Evaluator(schema, tuple);
+			eval.sendTuple(tuple);
 			if(condition.size() != 0){
 				Iterator<Expression> iterator = condition.iterator();
 				while(iterator.hasNext()){
-					Expression currExp = iterator.next();
+					currExp = iterator.next();
 					currExp.accept(eval);
 					if (!(eval.getBool())) {
 						tuple = null;
