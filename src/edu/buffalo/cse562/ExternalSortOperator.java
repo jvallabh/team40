@@ -20,18 +20,21 @@ public class ExternalSortOperator implements Operator{
 	int[] orderIndex;
 	ColumnInfo[] schema;
 	ScanOperator scanOperator;
+	int index;
 	int[] orderByColumnIndex;
 	
-	public ExternalSortOperator(Operator input, List<OrderByElement> orderByColumns, String tmpdirectory) {
+	public ExternalSortOperator(Operator input, List<OrderByElement> orderByColumns, String tmpdirectory,int index) {
 		this.input = input;		
 		this.orderByColumns = orderByColumns;
 		this.schema = input.getSchema();
 		getOrderByColumnIndexes();
 		this.scanOperator = new ScanOperator(mergeFiles(sortBlock(input,tmpdirectory),tmpdirectory),schema);
 		scanOperator.conditions = new ArrayList<>();
+		this.index = index;
 	}
 
 	public List sortBlock(Operator operator, String tmpdirectory) {
+		if(index==-1) {
 		Datum[] currTuple;
 		List<File> files =  new ArrayList<File>();
 		long count = 700000;
@@ -55,6 +58,32 @@ public class ExternalSortOperator implements Operator{
 		Collections.sort(sortableTuples, new SortableTuple(null));
 		files.add(saveBlock(sortableTuples,tmpdirectory));
 		return files;
+		}
+		else {
+			Datum[] currTuple;
+			long count = 700000;
+			List<File> files =  new ArrayList<File>();
+			SortableTuple.schema=schema;
+			SortableTuple.orderByColumnIndex=new int[]{index};
+			SortableTuple.orderIndex=new int[]{1};
+			ArrayList<SortableTuple> sortableTuples = new ArrayList<SortableTuple>();
+			while((currTuple = readOneTupleFromInput()) != null) {
+				SortableTuple sortableTuple = new SortableTuple(currTuple);
+				sortableTuples.add(sortableTuple);
+				if(count>0){
+				count--;
+				}
+				else {
+				Collections.sort(sortableTuples, new SortableTuple(null));
+				files.add(saveBlock(sortableTuples,tmpdirectory));
+				sortableTuples = new ArrayList<>();
+				count = 700000;
+				}
+			}
+			Collections.sort(sortableTuples, new SortableTuple(null));
+			files.add(saveBlock(sortableTuples,tmpdirectory));
+			return files;
+		}
 	}
 	
 	public File saveBlock(ArrayList<SortableTuple> sortableTuples, String tmpdirectory) {
