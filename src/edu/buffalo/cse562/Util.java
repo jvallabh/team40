@@ -96,11 +96,13 @@ public class Util {
 				else{
 					ColumnInfo[] schema1 = finalJoinedOperator.getSchema();
 					Object[] whereJoinConditionDetails = getConditionsOfJoin(schema1, tempTableOperator.getSchema(), whereCondExpressions);
+									
+					int index2 =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[0];
+					ExternalSortOperator sortOp1 = new ExternalSortOperator(finalJoinedOperator, null, Main.swapDir,index2);
 					int index =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[1];
-					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir, index);					
+					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir, index);	
 					
-					
-					finalJoinedOperator = new JoinOperator(finalJoinedOperator, sortOp2, null);
+					finalJoinedOperator = new JoinOperator(sortOp1, sortOp2, null);
 
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
@@ -111,11 +113,11 @@ public class Util {
 			if(joinCondition != null){
 				if(finalJoinedOperator == null){
 					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
-					int index =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[0];
-					ExternalSortOperator sortOp1 = new ExternalSortOperator(firstTable, null, Main.swapDir,index);
+					int index1 =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[0];
+					ExternalSortOperator sortOp1 = new ExternalSortOperator(firstTable, null, Main.swapDir,index1);
 					
-					index =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[1];
-					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir,index);
+					int index2 =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[1];
+					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir,index2);
 					
 					
 					finalJoinedOperator = new JoinOperator(sortOp1, sortOp2, joinCondition);
@@ -126,11 +128,13 @@ public class Util {
 				else{
 					
 					Object[] whereJoinConditionDetails = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
-					int index =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[1];
-					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir,index);					
+					int index1 =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[0];
+					ExternalSortOperator sortOp1 = new ExternalSortOperator(finalJoinedOperator, null, Main.swapDir,index1);
+					int index2 =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[1];
+					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir,index2);					
 					
 					
-					finalJoinedOperator = new JoinOperator(finalJoinedOperator, sortOp2, joinCondition);
+					finalJoinedOperator = new JoinOperator(sortOp1, sortOp2, joinCondition);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 					finalJoinedOperator.buildHash();
