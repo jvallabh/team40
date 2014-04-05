@@ -87,7 +87,7 @@ public class SelectProcessor {
 		
 		List<OrderByElement> orderByColumns = pselect.getOrderByElements();
 		boolean hasOrderBy = orderByColumns == null?false:true;
-		OrderByOperator finalOrderByOperator = null;
+		Operator finalOrderByOperator = null;
 		
 		Distinct distinct = pselect.getDistinct();
 		boolean hasDistinct = distinct == null?false:true;
@@ -97,10 +97,13 @@ public class SelectProcessor {
 		SelectionOperator selectOperator = null;
 		ProjectionOperator projectOperator = null;
 		
-		if(hasJoin){
-			
-			
-			finalJoinedOperator = (JoinOperator) Util.getJoinedOperator(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+		if(hasJoin){			
+			if(Main.swapDir == null){
+				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);				
+			}
+			else{
+				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+			}
 			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, whereCondExpressions);
 		
 		}
@@ -124,8 +127,11 @@ public class SelectProcessor {
 		
 		AggrOperator aggrOperator = new AggrOperator(inputToAggr,inputToAggr.getSchema(),selectItems);
 		
-		if(hasOrderBy){
-			finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
+		if(hasOrderBy && !Util.isOrderBySameAsGroupBy(orderByColumns, groupByColumns)){
+			if(Main.swapDir==null)
+				finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
+			else
+				finalOrderByOperator = new ExternalSortOperator(aggrOperator, orderByColumns, Main.swapDir, -1);
 		}
 		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
 		
