@@ -11,6 +11,7 @@ import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.Function;
 import net.sf.jsqlparser.expression.operators.relational.ExpressionList;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.Distinct;
@@ -19,6 +20,7 @@ import net.sf.jsqlparser.statement.select.OrderByElement;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectExpressionItem;
 import net.sf.jsqlparser.statement.select.SelectItem;
 
 /**
@@ -63,13 +65,17 @@ public class SelectProcessor {
 		List<Column> groupByColumns = pselect.getGroupByColumnReferences();
 		
 		for(SelectItem selectItem:selectItems){
-			if(selectItem instanceof Function) {
-				Function count = (Function) selectItem;
+			Expression expr = ((SelectExpressionItem)selectItem).getExpression();
+			if(expr instanceof Function) {
+				Function count = (Function) expr;
 				if(count.getName().equalsIgnoreCase("COUNT")){
 					if(count.isDistinct()) {
 						ExpressionList exp = count.getParameters();
 						List<Expression> expList = exp.getExpressions();
+						String colname = ((SelectExpressionItem)selectItem).getAlias();
 						Column col = (Column)expList.get(0);
+						if(colname!=null)
+							col = new Column(new Table(),colname);
 						groupByColumns.add(col);
 					}
 				}
