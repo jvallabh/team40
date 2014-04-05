@@ -33,9 +33,9 @@ public class ExternalSortOperator implements Operator{
 		else{
 			orderByColumnIndex=new int[]{index};
 		}			
+		this.index = index;
 		this.scanOperator = new ScanOperator(mergeFiles(sortBlock(input,tmpdirectory),tmpdirectory),schema);
 		scanOperator.conditions = new ArrayList<>();
-		this.index = index;
 	}
 
 	public List sortBlock(Operator operator, String tmpdirectory) {
