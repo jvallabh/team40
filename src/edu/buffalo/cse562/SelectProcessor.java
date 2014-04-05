@@ -60,7 +60,7 @@ public class SelectProcessor {
 		 */
 		List<Join> joinDetails = pselect.getJoins();
 		boolean hasJoin = joinDetails == null?false:true;
-		JoinOperator finalJoinedOperator = null;
+		Operator finalJoinedOperator = null;
 		
 		List<Column> groupByColumns = pselect.getGroupByColumnReferences();
 		
@@ -102,9 +102,9 @@ public class SelectProcessor {
 				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);				
 			}
 			else{
-				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+				finalJoinedOperator = (SortMergeJoin) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			}
-			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, whereCondExpressions);
+			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.getSchema(), whereCondExpressions);
 		
 		}
 		else{			
@@ -114,7 +114,10 @@ public class SelectProcessor {
 		projectOperator = new ProjectionOperator(selectOperator,selectOperator.getSchema(),selectItems);
 		
 		if(hasGroupBy){
-			finalGrpByOperator = Util.getGroupByOperator(projectOperator, groupByColumns);
+			if(Main.swapDir==null)
+				finalGrpByOperator = Util.getGroupByOperator(projectOperator, groupByColumns);
+			else
+				finalGrpByOperator = Util.getGroupByOperatorExternalSort(projectOperator,groupByColumns);
 		}
 		Operator inputToAggr = finalGrpByOperator!=null?finalGrpByOperator:projectOperator;
 

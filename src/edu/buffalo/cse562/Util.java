@@ -119,7 +119,7 @@ public class Util {
 	}
 	
 	public static Operator getJoinedOperatorExternal(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
-		JoinOperator finalJoinedOperator = null;
+		SortMergeJoin finalJoinedOperator = null;
 		for(Join currJoin:joinDetails){
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
 			currJoin.getRightItem().accept(tempFromScan);
@@ -135,7 +135,7 @@ public class Util {
 					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir,index2);
 					
 					
-					finalJoinedOperator = new JoinOperator(sortOp1, sortOp2, null);					
+					finalJoinedOperator = new SortMergeJoin(sortOp1, sortOp2, null);					
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 					finalJoinedOperator.buildHash();
@@ -149,7 +149,7 @@ public class Util {
 					int index =( (ArrayList<Integer[]>) whereJoinConditionDetails[1]).get(0)[1];
 					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir, index);	
 					
-					finalJoinedOperator = new JoinOperator(sortOp1, sortOp2, null);
+					finalJoinedOperator = new SortMergeJoin(sortOp1, sortOp2, null);
 
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
@@ -167,7 +167,7 @@ public class Util {
 					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir,index2);
 					
 					
-					finalJoinedOperator = new JoinOperator(sortOp1, sortOp2, joinCondition);
+					finalJoinedOperator = new SortMergeJoin(sortOp1, sortOp2, joinCondition);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 					finalJoinedOperator.buildHash();
@@ -181,7 +181,7 @@ public class Util {
 					ExternalSortOperator sortOp2 = new ExternalSortOperator(tempTableOperator, null, Main.swapDir,index2);					
 					
 					
-					finalJoinedOperator = new JoinOperator(sortOp1, sortOp2, joinCondition);
+					finalJoinedOperator = new SortMergeJoin(sortOp1, sortOp2, joinCondition);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 					finalJoinedOperator.buildHash();
@@ -206,6 +206,11 @@ public class Util {
 			}			
 		}
 		return finalGrpByOperator;*/
+	}
+	
+	public static Operator getGroupByOperatorExternalSort(Operator inputOperator, List<Column> groupByColumns){
+		List<OrderByElement> orderByElements = convertGrpByColumnsToOrderByElements(groupByColumns);
+		return new ExternalSortOperator(inputOperator, orderByElements,Main.swapDir,-1);
 	}
 	
 	@SuppressWarnings("unchecked")
