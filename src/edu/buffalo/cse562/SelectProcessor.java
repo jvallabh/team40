@@ -97,10 +97,13 @@ public class SelectProcessor {
 		SelectionOperator selectOperator = null;
 		ProjectionOperator projectOperator = null;
 		
-		if(hasJoin){
-			
-			
-			finalJoinedOperator = (JoinOperator) Util.getJoinedOperator(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+		if(hasJoin){			
+			if(Main.swapDir == null){
+				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);				
+			}
+			else{
+				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+			}
 			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.schema, whereCondExpressions);
 		
 		}
@@ -124,7 +127,7 @@ public class SelectProcessor {
 		
 		AggrOperator aggrOperator = new AggrOperator(inputToAggr,inputToAggr.getSchema(),selectItems);
 		
-		if(hasOrderBy){
+		if(hasOrderBy && !Util.isOrderBySameAsGroupBy(orderByColumns, groupByColumns)){
 			if(Main.swapDir==null)
 				finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
 			else

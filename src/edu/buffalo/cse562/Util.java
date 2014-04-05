@@ -10,8 +10,10 @@ import java.util.List;
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.LongValue;
+import net.sf.jsqlparser.expression.Parenthesis;
 import net.sf.jsqlparser.expression.StringValue;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.conditional.OrExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
@@ -71,7 +73,52 @@ public class Util {
 		
 	}
 	
-	public static Operator getJoinedOperator(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
+	public static Operator getJoinedOperatorHashHybrid(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
+		JoinOperator finalJoinedOperator = null;
+		for(Join currJoin:joinDetails){
+			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
+			currJoin.getRightItem().accept(tempFromScan);
+			Operator tempTableOperator = tempFromScan.source;
+			((ScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
+			if(currJoin.isSimple()){
+				if(finalJoinedOperator == null){
+					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, null);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}
+				else{
+					ColumnInfo[] schema1 = finalJoinedOperator.getSchema();
+					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, null);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(schema1, tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}
+			}
+			Expression joinCondition = currJoin.getOnExpression();
+			if(joinCondition != null){
+				if(finalJoinedOperator == null){
+					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, joinCondition);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}
+				else{
+					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, joinCondition);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}				
+			}
+		}
+		return finalJoinedOperator;
+	}
+	
+	public static Operator getJoinedOperatorExternal(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
 		JoinOperator finalJoinedOperator = null;
 		for(Join currJoin:joinDetails){
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
@@ -245,6 +292,14 @@ public class Util {
 			currLeft = ((MinorThanEquals) inputExp).getLeftExpression();
 			currRight = ((MinorThanEquals) inputExp).getRightExpression();			
 		}
+		else if(inputExp instanceof Parenthesis){
+			if(((Parenthesis)inputExp).getExpression() instanceof OrExpression && isSingleTableOrExpression((OrExpression)((Parenthesis)inputExp).getExpression())){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
 		
 		if(currLeft instanceof Column && !(currRight instanceof Column)){
 			/*This is to handle conditions like
@@ -282,6 +337,42 @@ public class Util {
 	}
 	
 	/**
+	 * This method is useful in identifying following type expressions in where clause
+	 * (lineitem.shipmode='AIR' or lineitem.shipmode='MAIL' or lineitem.shipmode='TRUCK' or lineitem.shipmode='SHIP')
+	 * @param expr
+	 * @return
+	 */
+	public static boolean isSingleTableOrExpression(OrExpression expr){
+		Expression currExpression = expr;
+		String tableName = null;
+		while(currExpression instanceof OrExpression){
+			OrExpression currOrExp = (OrExpression)currExpression;
+			Expression currRightExp = currOrExp.getRightExpression();
+			if(currRightExp instanceof EqualsTo){
+				Expression currLeft = ((EqualsTo) currRightExp).getLeftExpression();
+				Expression currRight = ((EqualsTo) currRightExp).getRightExpression();
+				if(currLeft instanceof Column && !(currRight instanceof Column)){
+			      String currTableName = ((Column)currLeft).getTable().getName();
+			      if(tableName == null){
+			    	  tableName = currTableName;
+			      }
+			      else if(!tableName.equals(currTableName)){
+			    	  return false;
+			      }
+				}
+				else{
+					return false;
+				}
+			}
+			else{
+				return false;
+			}
+			currExpression = currOrExp.getLeftExpression();
+		}
+		return true;
+	}
+	
+	/**
 	 * Given a schema, it will return the list of conditions that can be evaluated.
 	 * Example : SELECT * FROM R,S WHERE R.A='123' AND S.B='456' AND R.C = S.C;
 	 * When you send the schema of table R, this method will return the condition R.A='123' only.  
@@ -293,7 +384,14 @@ public class Util {
 		Iterator<Expression> iterator = conditionsOnSingleTables.iterator();
 		while(iterator.hasNext()){
 			Expression currExp = iterator.next();
-			Column currColumn = (Column) ((BinaryExpression)currExp).getLeftExpression();
+			Column currColumn = null;
+			if(currExp instanceof BinaryExpression){
+				currColumn = (Column) ((BinaryExpression)currExp).getLeftExpression();
+			}
+			else if(currExp instanceof Parenthesis){
+				currColumn = (Column) ((EqualsTo)((OrExpression)((Parenthesis)currExp).getExpression()).getRightExpression()).getLeftExpression();
+			}
+			
 			for (int i=0; i<schema.length; i++) {
 				if (schema[i].colDef.getColumnName().equals(currColumn.getColumnName())) {
 					if(currColumn.getTable().getName() != null){
@@ -404,5 +502,23 @@ public class Util {
 			orderByElements.add(orderByElement);
 		}
 		return orderByElements;
+	}
+	
+	/**
+	 * This is a method to check whether the order by columns are same as group by columns or not.
+	 * If so, we can optimize the query execution by eliminating the order by all together. 
+	 * @param orderByElements
+	 * @param grpByCols
+	 * @return
+	 */
+	public static boolean isOrderBySameAsGroupBy(List<OrderByElement> orderByElements, List<Column> grpByCols){
+		for(int i=0;i<orderByElements.size();i++){
+			String orderByColumn = ((Column)(orderByElements.get(i).getExpression())).getColumnName();
+			String groupByColumn = grpByCols.get(i).getColumnName();
+			if(!orderByColumn.equalsIgnoreCase(groupByColumn)){
+				return false;
+			}
+		}
+		return true;
 	}
 }
