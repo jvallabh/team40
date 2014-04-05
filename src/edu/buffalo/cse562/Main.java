@@ -27,7 +27,7 @@ import net.sf.jsqlparser.statement.select.SelectBody;
 public class Main {
 	public static File dataDir;
 	public static HashMap<String, CreateTable> tables;
-	public static String swapDir;
+	public static String swapDir="/home/anil/Documents";
 
 	/**
 	 * @param args

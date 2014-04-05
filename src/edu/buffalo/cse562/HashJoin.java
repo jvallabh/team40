@@ -18,107 +18,112 @@ import net.sf.jsqlparser.expression.Expression;
  * Saket Adusumilli-----------saketadu@buffalo.edu
  * Anil Nalamalapu------------anilkuma@buffalo.edu
  */
-// If streams already sorted improvise.
-public class SortMergeJoin implements Operator {
+public class HashJoin implements Operator {
 	Operator input1;
 	Operator input2;
 	ColumnInfo[] schema;
 	Expression condition;
 	Datum[] tuple1 =null;
-	Datum [] tuple2 = null;
 	Iterator<Datum[]> iter=null;
 	boolean active = false;
-	ArrayList<Datum []> tupList = null;
+	boolean isHashed = false;
 	ArrayList<Expression> whereJoinCondition;
 	ArrayList<Integer[]> whereJoinIndexes;
 	int ind1=0;
 	int ind2=0;
+	Map<String, List<Datum[]>> map = new HashMap<String, List<Datum[]>>();
 	
-	
-	public SortMergeJoin(Operator input1, Operator input2, Expression condition){
+	public HashJoin(Operator input1, Operator input2, Expression condition){
 		this.input1 = input1;
 		this.input2 = input2;
 		this.condition = condition;
 		this.schema = getSchema(input1.getSchema(), input2.getSchema());
-		this.tuple2 = input2.readOneTuple();
+	
 	}
     
-	
+	public void buildHash()
+	{
+		ind1 = whereJoinIndexes.get(0)[0];
+		ind2 = whereJoinIndexes.get(0)[1];
+		Datum[] tuple3 = input1.readOneTuple();
+		while(tuple3!=null)
+		{
+			if(map.containsKey(tuple3[ind1].element)) {
+		        //Add to existing list
+		        map.get(tuple3[ind1].element).add(tuple3);
+
+		    } else {
+		        //Create new list
+		        List<Datum[]> tuples = new ArrayList<Datum[]>();
+		        tuples.add(tuple3);
+		        map.put(tuple3[ind1].element, tuples);
+		    }
+		  tuple3 = input1.readOneTuple();
+		}
+		
+
+		/*ind1 = whereJoinIndexes.get(0)[0];
+		ind2 = whereJoinIndexes.get(0)[1];
+		Datum[] tuple3 = input1.readOneTuple();
+		while(tuple3!=null)
+		{
+			if(map.containsKey(tuple3[ind1].element)) {
+		        //Add to existing list
+		        map.get(tuple3[ind1].element).add(tuple3);
+
+		    } else {
+		        //Create new list
+		        List<Datum[]> tuples = new ArrayList<Datum[]>();
+		        tuples.add(tuple3);
+		        map.put(tuple3[ind1].element, tuples);
+		    }
+		  tuple3 = input1.readOneTuple();
+		}*/
+	}
 	
 	@Override
 	public Datum[] readOneTuple() {
-		
-		while(true)
-		{
-			if(iter == null || !iter.hasNext())
+		/*if (!isHashed)
+		{ 
+			buildHash();
+			isHashed = true;
+		}*/
+		Datum[] tuple3 = null;
+		do {
+			if(iter==null)
 			{
-				tuple1 = input1.readOneTuple();
+				tuple1 = input2.readOneTuple();
 				if(tuple1==null)
 					return null;
-				 getIter();
-				 //reading tuple2 is over
-				if(iter == null && tuple2==null)
-					return null;
-				
-				else if(iter==null)
+				if(!map.containsKey(tuple1[ind2].element))
 					continue;
+				else
+				{
+					iter =  map.get(tuple1[ind2].element).iterator();
+					if(iter.hasNext())
+					{
+						tuple3 = getTuple(iter.next(), tuple1);
+				        return tuple3;
+					}
+					else
+						iter=null;
+				}
 			}
-			return getTuple(tuple1, iter.next());
-		}
-		
-		
-		
-	}
-	public int compareDatum(Datum dat1, Datum dat2){
-		int d1= Integer.parseInt(dat1.element);
-		int d2= Integer.parseInt(dat2.element);
-		if(d1<d2) return -1;
-		else if(d1>d2) return 1;
-		else return 0;
-	}
-	
-	public void getIter()
-	{
-		if(tupList!=null)
-		{
-			if(compareDatum(tupList.get(0)[ind2],tuple1[ind1])==0)
-			{	
-				iter =  tupList.iterator();
-				return;
-			
-			}
-			if(tuple2==null)
+			else
 			{
-				iter = null;
-				return;
+				if(iter.hasNext())
+				{
+					tuple3 = getTuple(iter.next(), tuple1);
+			        return tuple3;
+				}
+				else
+					iter=null;
+				
 			}
-		}
-		
-	
-		while(compareDatum(tuple2[ind2],tuple1[ind1]) < 0)
-		{
-			tuple2 = input2.readOneTuple();
-			if(tuple2==null)
-			{	iter = null;
-				return;
-			}
-		}
-		if(compareDatum(tuple2[ind2],tuple1[ind1]) == 0)
-		{
-			tupList = new ArrayList<Datum []>();
-		while(compareDatum(tuple2[ind2],tuple1[ind1]) == 0)
-		{
-			tupList.add(tuple2);
-			tuple2 = input2.readOneTuple();
-			if(tuple2 == null)
-				break;
-		}
-			iter= tupList.iterator();
-		}
-	
-		else
-			iter = null;
+		}while(tuple3==null);
+		return null;		
 	}
+	
 		
 	public Datum[] getTuple( Datum [] tuple1, Datum[] tuple2) {
 	
@@ -161,13 +166,5 @@ public class SortMergeJoin implements Operator {
 	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
-	}
-
-
-
-	public void buildHash() {
-		ind1 = whereJoinIndexes.get(0)[0];
-		ind2 = whereJoinIndexes.get(0)[1];
-		
 	}
 }

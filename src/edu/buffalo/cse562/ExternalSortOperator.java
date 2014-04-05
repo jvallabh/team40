@@ -27,7 +27,8 @@ public class ExternalSortOperator implements Operator{
 		this.input = input;		
 		this.orderByColumns = orderByColumns;
 		this.schema = input.getSchema();
-		getOrderByColumnIndexes();
+		if(index==-1)
+			getOrderByColumnIndexes();
 		this.scanOperator = new ScanOperator(mergeFiles(sortBlock(input,tmpdirectory),tmpdirectory),schema);
 		scanOperator.conditions = new ArrayList<>();
 		this.index = index;
