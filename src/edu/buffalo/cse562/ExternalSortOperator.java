@@ -27,8 +27,12 @@ public class ExternalSortOperator implements Operator{
 		this.input = input;		
 		this.orderByColumns = orderByColumns;
 		this.schema = input.getSchema();
-		if(index==-1)
+		if(index==-1){
 			getOrderByColumnIndexes();
+		}
+		else{
+			orderByColumnIndex=new int[]{index};
+		}			
 		this.scanOperator = new ScanOperator(mergeFiles(sortBlock(input,tmpdirectory),tmpdirectory),schema);
 		scanOperator.conditions = new ArrayList<>();
 		this.index = index;
@@ -38,7 +42,7 @@ public class ExternalSortOperator implements Operator{
 		if(index==-1) {
 		Datum[] currTuple;
 		List<File> files =  new ArrayList<File>();
-		long count = 700000;
+		long count = 10000;
 		SortableTuple.schema=schema;
 		SortableTuple.orderByColumnIndex=orderByColumnIndex;
 		SortableTuple.orderIndex=orderIndex;
@@ -53,7 +57,7 @@ public class ExternalSortOperator implements Operator{
 			Collections.sort(sortableTuples, new SortableTuple(null));
 			files.add(saveBlock(sortableTuples,tmpdirectory));
 			sortableTuples = new ArrayList<>();
-			count = 700000;
+			count = 10000;
 			}
 		}
 		Collections.sort(sortableTuples, new SortableTuple(null));
@@ -62,10 +66,11 @@ public class ExternalSortOperator implements Operator{
 		}
 		else {
 			Datum[] currTuple;
-			long count = 700000;
+			long count = 10000;
 			List<File> files =  new ArrayList<File>();
 			SortableTuple.schema=schema;
-			SortableTuple.orderByColumnIndex=new int[]{index};
+			SortableTuple.orderByColumnIndex=orderByColumnIndex;
+			//SortableTuple.orderByColumnIndex=new int[]{index};
 			SortableTuple.orderIndex=new int[]{1};
 			ArrayList<SortableTuple> sortableTuples = new ArrayList<SortableTuple>();
 			while((currTuple = readOneTupleFromInput()) != null) {
@@ -78,7 +83,7 @@ public class ExternalSortOperator implements Operator{
 				Collections.sort(sortableTuples, new SortableTuple(null));
 				files.add(saveBlock(sortableTuples,tmpdirectory));
 				sortableTuples = new ArrayList<>();
-				count = 700000;
+				count = 10000;
 				}
 			}
 			Collections.sort(sortableTuples, new SortableTuple(null));
