@@ -87,7 +87,7 @@ public class SelectProcessor {
 		
 		List<OrderByElement> orderByColumns = pselect.getOrderByElements();
 		boolean hasOrderBy = orderByColumns == null?false:true;
-		OrderByOperator finalOrderByOperator = null;
+		Operator finalOrderByOperator = null;
 		
 		Distinct distinct = pselect.getDistinct();
 		boolean hasDistinct = distinct == null?false:true;
@@ -125,7 +125,10 @@ public class SelectProcessor {
 		AggrOperator aggrOperator = new AggrOperator(inputToAggr,inputToAggr.getSchema(),selectItems);
 		
 		if(hasOrderBy){
-			finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
+			if(Main.swapDir==null)
+				finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
+			else
+				finalOrderByOperator = new ExternalSortOperator(aggrOperator, orderByColumns, Main.swapDir, -1);
 		}
 		Operator finalOperator = finalOrderByOperator != null?finalOrderByOperator:aggrOperator;
 		
