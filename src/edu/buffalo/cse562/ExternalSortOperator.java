@@ -42,7 +42,7 @@ public class ExternalSortOperator implements Operator{
 		if(index==-1) {
 		Datum[] currTuple;
 		List<File> files =  new ArrayList<File>();
-		long count = 10000;
+		long count = 20000;
 		SortableTuple.schema=schema;
 		SortableTuple.orderByColumnIndex=orderByColumnIndex;
 		SortableTuple.orderIndex=orderIndex;
@@ -57,7 +57,7 @@ public class ExternalSortOperator implements Operator{
 			Collections.sort(sortableTuples, new SortableTuple(null));
 			files.add(saveBlock(sortableTuples,tmpdirectory));
 			sortableTuples = new ArrayList<>();
-			count = 10000;
+			count = 20000;
 			}
 		}
 		Collections.sort(sortableTuples, new SortableTuple(null));
@@ -66,7 +66,7 @@ public class ExternalSortOperator implements Operator{
 		}
 		else {
 			Datum[] currTuple;
-			long count = 10000;
+			long count = 20000;
 			List<File> files =  new ArrayList<File>();
 			SortableTuple.schema=schema;
 			SortableTuple.orderByColumnIndex=orderByColumnIndex;
@@ -83,7 +83,7 @@ public class ExternalSortOperator implements Operator{
 				Collections.sort(sortableTuples, new SortableTuple(null));
 				files.add(saveBlock(sortableTuples,tmpdirectory));
 				sortableTuples = new ArrayList<>();
-				count = 10000;
+				count = 20000;
 				}
 			}
 			Collections.sort(sortableTuples, new SortableTuple(null));
@@ -98,7 +98,7 @@ public class ExternalSortOperator implements Operator{
 			newtmpfile = File.createTempFile("sortedBlock",".txt", new File(tmpdirectory));	
 	        OutputStream out = new FileOutputStream(newtmpfile);
 	        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(
-	                out, Charset.defaultCharset()));
+	                out, Charset.defaultCharset()),1024*1024);
 			for(SortableTuple curr:sortableTuples){
 				fbw.write(toDatumString(curr.tuple));
 				fbw.newLine();
@@ -126,7 +126,7 @@ public class ExternalSortOperator implements Operator{
 			try{
 				newtmpfile = File.createTempFile("sortedBlock",".txt", new File(tmpdirectory));
 		        OutputStream out = new FileOutputStream(newtmpfile);
-		        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(out, Charset.defaultCharset()));
+		        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(out, Charset.defaultCharset()),1024*1024);
 				file1 = files.get(0);
 				file2 = files.get(1);
 				scan1 = new ScanOperator(file1, schema);
