@@ -22,6 +22,7 @@ public class ExternalSortOperator implements Operator{
 	ScanOperator scanOperator;
 	int index;
 	int[] orderByColumnIndex;
+	int bucketSize = 150000;
 	
 	public ExternalSortOperator(Operator input, List<OrderByElement> orderByColumns, String tmpdirectory,int index) {
 		this.input = input;		
@@ -42,7 +43,7 @@ public class ExternalSortOperator implements Operator{
 		if(index==-1) {
 		Datum[] currTuple;
 		List<File> files =  new ArrayList<File>();
-		long count = 20000;
+		long count = bucketSize;
 		SortableTuple.schema=schema;
 		SortableTuple.orderByColumnIndex=orderByColumnIndex;
 		SortableTuple.orderIndex=orderIndex;
@@ -57,7 +58,7 @@ public class ExternalSortOperator implements Operator{
 			Collections.sort(sortableTuples, new SortableTuple(null));
 			files.add(saveBlock(sortableTuples,tmpdirectory));
 			sortableTuples = new ArrayList<>();
-			count = 20000;
+			count = bucketSize;
 			}
 		}
 		Collections.sort(sortableTuples, new SortableTuple(null));
@@ -66,7 +67,7 @@ public class ExternalSortOperator implements Operator{
 		}
 		else {
 			Datum[] currTuple;
-			long count = 20000;
+			long count = bucketSize;
 			List<File> files =  new ArrayList<File>();
 			SortableTuple.schema=schema;
 			SortableTuple.orderByColumnIndex=orderByColumnIndex;
@@ -83,7 +84,7 @@ public class ExternalSortOperator implements Operator{
 				Collections.sort(sortableTuples, new SortableTuple(null));
 				files.add(saveBlock(sortableTuples,tmpdirectory));
 				sortableTuples = new ArrayList<>();
-				count = 20000;
+				count = bucketSize;
 				}
 			}
 			Collections.sort(sortableTuples, new SortableTuple(null));
@@ -98,7 +99,7 @@ public class ExternalSortOperator implements Operator{
 			newtmpfile = File.createTempFile("sortedBlock",".txt", new File(tmpdirectory));	
 	        OutputStream out = new FileOutputStream(newtmpfile);
 	        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(
-	                out, Charset.defaultCharset()),1024*1024);
+	                out, Charset.defaultCharset()), 15*1024*1024);
 			for(SortableTuple curr:sortableTuples){
 				fbw.write(toDatumString(curr.tuple));
 				fbw.newLine();
@@ -126,7 +127,7 @@ public class ExternalSortOperator implements Operator{
 			try{
 				newtmpfile = File.createTempFile("sortedBlock",".txt", new File(tmpdirectory));
 		        OutputStream out = new FileOutputStream(newtmpfile);
-		        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(out, Charset.defaultCharset()),1024*1024);
+		        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(out, Charset.defaultCharset()),15*1024*1024);
 				file1 = files.get(0);
 				file2 = files.get(1);
 				scan1 = new ScanOperator(file1, schema);
