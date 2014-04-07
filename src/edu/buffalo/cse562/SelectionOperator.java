@@ -38,9 +38,9 @@ public class SelectionOperator implements Operator {
 		do {
 			tuple = input.readOneTuple();
 			if (tuple == null) return null;
-			
-			eval.sendTuple(tuple);
+						
 			if(condition.size() != 0){
+				eval.sendTuple(tuple);
 				Iterator<Expression> iterator = condition.iterator();
 				while(iterator.hasNext()){
 					currExp = iterator.next();
