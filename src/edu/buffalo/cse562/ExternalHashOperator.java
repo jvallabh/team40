@@ -18,7 +18,7 @@ public class ExternalHashOperator implements Operator{
 	Operator input2;
 	int index1, index2;
 	ColumnInfo[] schema;
-	public static final int hashSize = 8;
+	public static final int hashSize = 32;
 	public static final String tmpdirectory = Main.swapDir;
 	File[] file1 = new File[hashSize];
 	File[] file2 = new File[hashSize];
