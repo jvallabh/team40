@@ -25,7 +25,7 @@ public class ScanOperator implements Operator {
 	BufferedReader input;
 	File f;
 	ColumnInfo[] schema;
-	ArrayList<Expression> conditions;
+	ArrayList<Expression> conditions = new ArrayList<Expression>();
 	Evaluator eval;
 	Iterator<Expression> iterator;
 	Expression currCondition;

@@ -72,6 +72,78 @@ public class Util {
 		}
 		
 	}
+	public static boolean isNotLineitem(Operator table2 )
+	{
+		ColumnInfo[] schema2 = table2.getSchema();
+		return (!schema2[0].tableName.equalsIgnoreCase("lineitem"));
+	
+	}
+	
+	public static Operator getExternalHashOperator(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
+		ExternalHashOperator finalJoinedOperator = null;
+		for(Join currJoin:joinDetails){
+			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
+			currJoin.getRightItem().accept(tempFromScan);
+			Operator tempTableOperator = tempFromScan.source;
+			((ScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
+			if(currJoin.isSimple()){
+				if(finalJoinedOperator == null){
+					Object[] whereJoinConditionDetails = new Object[]{}; 
+					if (isNotLineitem(tempTableOperator))
+					{
+					finalJoinedOperator = new ExternalHashOperator(tempTableOperator,firstTable);
+					 whereJoinConditionDetails = getConditionsOfJoin(tempTableOperator.getSchema(),firstTable.getSchema(),  whereCondExpressions);
+					}
+					else
+					{
+						finalJoinedOperator = new ExternalHashOperator(firstTable,tempTableOperator);
+						 whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					}
+					
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}
+				else{
+					Object[] whereJoinConditionDetails = new Object[]{};
+					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
+					if (isNotLineitem(tempTableOperator))
+					{
+					finalJoinedOperator = new ExternalHashOperator(tempTableOperator,finalJoinedOperator);
+					 whereJoinConditionDetails = getConditionsOfJoin(tempTableOperator.getSchema(),currFinalSchema, whereCondExpressions);
+					}
+					else
+					{
+						finalJoinedOperator = new ExternalHashOperator(finalJoinedOperator,tempTableOperator);
+						 whereJoinConditionDetails = getConditionsOfJoin(currFinalSchema, tempTableOperator.getSchema(), whereCondExpressions);
+					}
+										
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}
+			}
+			Expression joinCondition = currJoin.getOnExpression();
+			if(joinCondition != null){
+				if(finalJoinedOperator == null){
+					finalJoinedOperator = new ExternalHashOperator(firstTable, tempTableOperator);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}
+				else{
+					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
+					finalJoinedOperator = new ExternalHashOperator(finalJoinedOperator, tempTableOperator);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(currFinalSchema, tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
+					finalJoinedOperator.buildHash();
+				}				
+			}
+		}
+		return finalJoinedOperator;
+	}
 	
 	public static Operator getJoinedOperatorHashHybrid(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
 		JoinOperator finalJoinedOperator = null;
@@ -82,16 +154,36 @@ public class Util {
 			((ScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
 			if(currJoin.isSimple()){
 				if(finalJoinedOperator == null){
-					finalJoinedOperator = new JoinOperator(firstTable, tempTableOperator, null);
-					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = new Object[]{}; 
+					if (isNotLineitem(tempTableOperator))
+					{
+					finalJoinedOperator = new JoinOperator(tempTableOperator,firstTable, null);
+					 whereJoinConditionDetails = getConditionsOfJoin(tempTableOperator.getSchema(),firstTable.getSchema(),  whereCondExpressions);
+					}
+					else
+					{
+						finalJoinedOperator = new JoinOperator(firstTable,tempTableOperator, null);
+						 whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					}
+					
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 					finalJoinedOperator.buildHash();
 				}
 				else{
-					ColumnInfo[] schema1 = finalJoinedOperator.getSchema();
-					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, null);
-					Object[] whereJoinConditionDetails = getConditionsOfJoin(schema1, tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = new Object[]{};
+					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
+					if (isNotLineitem(tempTableOperator))
+					{
+					finalJoinedOperator = new JoinOperator(tempTableOperator,finalJoinedOperator, null);
+					 whereJoinConditionDetails = getConditionsOfJoin(tempTableOperator.getSchema(), currFinalSchema,  whereCondExpressions);
+					}
+					else
+					{
+						finalJoinedOperator = new JoinOperator(finalJoinedOperator,tempTableOperator, null);
+						 whereJoinConditionDetails = getConditionsOfJoin(currFinalSchema, tempTableOperator.getSchema(), whereCondExpressions);
+					}
+										
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 					finalJoinedOperator.buildHash();
@@ -107,8 +199,9 @@ public class Util {
 					finalJoinedOperator.buildHash();
 				}
 				else{
+					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
 					finalJoinedOperator = new JoinOperator(finalJoinedOperator, tempTableOperator, joinCondition);
-					Object[] whereJoinConditionDetails = getConditionsOfJoin(finalJoinedOperator.getSchema(), tempTableOperator.getSchema(), whereCondExpressions);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(currFinalSchema, tempTableOperator.getSchema(), whereCondExpressions);
 					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>)whereJoinConditionDetails[0];
 					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>)whereJoinConditionDetails[1];
 					finalJoinedOperator.buildHash();

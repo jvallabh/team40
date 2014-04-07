@@ -102,10 +102,10 @@ public class SelectProcessor {
 				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);				
 			}
 			else{
-				finalJoinedOperator = (SortMergeJoin) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+				finalJoinedOperator = (ExternalHashOperator) Util.getExternalHashOperator(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+				//finalJoinedOperator = (SortMergeJoin) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			}
 			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.getSchema(), whereCondExpressions);
-		
 		}
 		else{			
 			selectOperator = new SelectionOperator(firstTableOperator, firstTableOperator.getSchema(), whereCondExpressions);
