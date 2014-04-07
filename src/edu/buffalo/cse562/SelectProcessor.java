@@ -102,6 +102,9 @@ public class SelectProcessor {
 				finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);				
 			}
 			else{
+				if(Main.sqlFiles.get(0).toString().contains("12"))
+					finalJoinedOperator = (SortMergeJoin) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+				else
 				finalJoinedOperator = (ExternalHashOperator) Util.getExternalHashOperator(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 				//finalJoinedOperator = (SortMergeJoin) Util.getJoinedOperatorExternal(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			}

@@ -28,13 +28,13 @@ public class Main {
 	public static File dataDir;
 	public static HashMap<String, CreateTable> tables;
 	public static String swapDir;
-
+	public static ArrayList<File> sqlFiles = new ArrayList<>();
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		int i;
-		ArrayList<File> sqlFiles = new ArrayList<>();
+		
 		tables = new HashMap<>();
 		for(i=0;i<args.length;i++){
 			if(args[i].equals("--data")){
