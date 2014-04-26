@@ -29,6 +29,8 @@ public class Main {
 	public static HashMap<String, CreateTable> tables;
 	public static String swapDir;
 	public static ArrayList<File> sqlFiles = new ArrayList<>();
+	public static boolean build = false;
+
 	/**
 	 * @param args
 	 */
@@ -43,6 +45,10 @@ public class Main {
 			}
 			else if(args[i].equals("--swap")) {
 				swapDir = new String(args[i+1]);
+				i++;
+			}
+			else if(args[i].equals("--build")) {
+				build = true;
 				i++;
 			}
 			else{
