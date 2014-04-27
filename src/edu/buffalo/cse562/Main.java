@@ -9,6 +9,7 @@ import java.util.HashMap;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
 import net.sf.jsqlparser.parser.ParseException;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.Statement;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.Limit;
@@ -30,6 +31,8 @@ public class Main {
 	public static String swapDir;
 	public static ArrayList<File> sqlFiles = new ArrayList<>();
 	public static boolean build = false;
+	public static ArrayList<Table> tableNames = new ArrayList<>();
+	public static String indexDir;
 
 	/**
 	 * @param args
@@ -49,12 +52,16 @@ public class Main {
 			}
 			else if(args[i].equals("--build")) {
 				build = true;
+			}
+			else if(args[i].equals("--index")) {
+				indexDir = new String(args[i+1]);
 				i++;
 			}
 			else{
 				sqlFiles.add(new File(args[i]));
 			}
 		}
+
 		for(File sql:sqlFiles){
 			FileReader stream = null;
 			CCJSqlParser parser = null;
@@ -67,22 +74,42 @@ public class Main {
 						CreateTable currTable = (CreateTable)stmt;
 						String tableName = currTable.getTable().getName();
 						tables.put(tableName, currTable);
+						if(Main.build)
+							Main.tableNames.add(currTable.getTable());
 					}
 					else if(stmt instanceof Select){
-						SelectBody select = ((Select)stmt).getSelectBody();
-						if(select instanceof PlainSelect){
-							PlainSelect pselect = (PlainSelect)select;
-							Operator resultOperator = SelectProcessor.processPlainSelect(pselect);
-							
-							Limit limit = pselect.getLimit();
-							boolean hasLimit = limit == null?false:true;
-							if(hasLimit){
-								Util.printOutputTuples(resultOperator, (int) limit.getRowCount());
+						if(Main.build) {
+							FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
+							BuildIndex buildIndex = new BuildIndex(null,0);
+							for(Table s: tableNames){
+								fromscanner.visit(s);
+								Operator scanOperator = fromscanner.source;
+								buildIndex.input = scanOperator;
+								try {
+									buildIndex.buildIndex();
+								}
+								catch(Exception e){
+									e.printStackTrace();
+								}
 							}
-							else{
-								Util.printOutputTuples(resultOperator);
-							}												
-						}							
+							return;
+						}
+						else {
+							SelectBody select = ((Select)stmt).getSelectBody();
+							if(select instanceof PlainSelect){
+								PlainSelect pselect = (PlainSelect)select;
+								Operator resultOperator = SelectProcessor.processPlainSelect(pselect);
+								
+								Limit limit = pselect.getLimit();
+								boolean hasLimit = limit == null?false:true;
+								if(hasLimit){
+									Util.printOutputTuples(resultOperator, (int) limit.getRowCount());
+								}
+								else{
+									Util.printOutputTuples(resultOperator);
+								}												
+							}
+						}
 					}
 				}
 			}
