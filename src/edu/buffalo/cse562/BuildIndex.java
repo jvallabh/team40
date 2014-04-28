@@ -35,6 +35,9 @@ public class BuildIndex {
 		tableIndex.put("customer", new int[]{0,3});
 		tableIndex.put("supplier", new int[]{0,3});
 		tableIndex.put("nation", new int[]{0,2});
+		tableIndex.put("part", new int[]{0});
+		tableIndex.put("partsupp", new int[]{0});
+		tableIndex.put("region", new int[]{0});
 	}
 	
 	public void buildIndex() throws Exception{
