@@ -394,7 +394,7 @@ public class Util {
 			if(currExpression instanceof AndExpression){
 				AndExpression andExp = (AndExpression) currExpression;
 				Expression rightExp = andExp.getRightExpression();
-				if(isSingleTableConditionExpression(rightExp)&&false){
+				if(isSingleTableConditionExpression(rightExp)){
 					conditionsOnSingleTables.add(rightExp);
 				}
 				else{
@@ -402,7 +402,7 @@ public class Util {
 				}
 				currExpression = andExp.getLeftExpression();				
 			}
-			else if(isSingleTableConditionExpression(currExpression)&&false){
+			else if(isSingleTableConditionExpression(currExpression)){
 				conditionsOnSingleTables.add(currExpression);
 				break;
 			}

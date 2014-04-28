@@ -98,7 +98,8 @@ public class SelectProcessor {
 		ProjectionOperator projectOperator = null;
 		
 		if(hasJoin){	
-			finalJoinedOperator = (INLJOperator) Util.getJoinedOperatorINLJ(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+			//finalJoinedOperator = (INLJOperator) Util.getJoinedOperatorINLJ(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+			finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.getSchema(), whereCondExpressions);
 		}
 			/*if(Main.swapDir == null){
