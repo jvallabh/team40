@@ -14,19 +14,13 @@ public class BuildIndex {
 	Operator input;
 	int index;
 	ColumnInfo[] schema;
-	RecordManager indexFile;
+	static RecordManager indexFile;
 	HashMap<String,int[]> tableIndex = new HashMap<String,int[]>();
 	
 	
 	public BuildIndex(Operator input,int index) {
 		this.input = input;
 		this.index = index;
-		try{
-			this.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
-		}
-		catch(Exception e){
-			e.printStackTrace();
-		}
 	}
 	
 	public void buildTableIndex(){

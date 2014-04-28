@@ -84,14 +84,14 @@ public class Main {
 					}
 					else if(stmt instanceof Select){
 						if(Main.build) {
-							FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
-							BuildIndex buildIndex = new BuildIndex(null,0);
 							try{
-								buildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+								BuildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
 							}
 							catch(Exception e){
 								e.printStackTrace();
 							}
+							FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
+							BuildIndex buildIndex = new BuildIndex(null,0);
 							buildIndex.buildTableIndex();
 							for(Table s: tableNames){
 								fromscanner.visit(s);
@@ -104,7 +104,7 @@ public class Main {
 									e.printStackTrace();
 								}
 							}
-							buildIndex.indexFile.close();
+							BuildIndex.indexFile.close();
 							return;
 						}
 						else {
