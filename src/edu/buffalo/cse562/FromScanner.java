@@ -44,8 +44,9 @@ public class FromScanner implements FromItemVisitor {
 		schema = new ColumnInfo[colDefs.size()];
 		colDefs.toArray(colDefschema);
 		for(int i=0;i<colDefschema.length;i++){
+			String origTableName = tableName.getName();
 			String tableNameEffective=tableName.getAlias() != null?tableName.getAlias():tableName.getName();
-			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective,0);
+			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective,0,origTableName);
 		}
 		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"), schema);
 		

@@ -34,7 +34,7 @@ public class INLJOperator implements Operator {
 		ind1 = this.whereJoinIndexes.get(0)[0];
 		ind2 = this.whereJoinIndexes.get(0)[1];
 		try{
-		tree = BTree.load(indexFile,indexFile.getNamedObject(input2.getSchema()[ind2].tableName+"_"+input2.getSchema()[ind2].colDef.getColumnName()));
+		tree = BTree.load(indexFile,indexFile.getNamedObject(input2.getSchema()[ind2].origTableName+"_"+input2.getSchema()[ind2].colDef.getColumnName()));
 		}
 		catch(Exception e) {
 			e.printStackTrace();	

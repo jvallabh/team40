@@ -16,11 +16,13 @@ import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 public class ColumnInfo {
 	ColumnDefinition colDef;
 	String tableName;
+	String origTableName;
 	int functionType=0;
-	ColumnInfo(ColumnDefinition colDef, String tableName, int functionType){
+	ColumnInfo(ColumnDefinition colDef, String tableName, int functionType,String origTableName){
 		this.colDef=colDef;
 		this.tableName=tableName;
 		this.functionType=functionType;
+		this.origTableName=origTableName;
 	}
 
 }

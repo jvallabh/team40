@@ -154,10 +154,10 @@ public class ProjectionOperator implements Operator {
 				}
 				colDef.setColDataType(getNumType(exp.getExpression()));
 				if(exp.getExpression() instanceof Function) {
-					schemaList.add(new ColumnInfo(colDef, getTableName(exp.getExpression()),isFunction((Function) exp.getExpression())));
+					schemaList.add(new ColumnInfo(colDef, getTableName(exp.getExpression()),isFunction((Function) exp.getExpression()),null));
 				}
 				else
-					schemaList.add(new ColumnInfo(colDef, getTableName(exp.getExpression()),0));
+					schemaList.add(new ColumnInfo(colDef, getTableName(exp.getExpression()),0,null));
 			}
 		}
 		schema = schemaList.toArray(new ColumnInfo[0]);
