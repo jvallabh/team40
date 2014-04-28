@@ -2,10 +2,11 @@ package edu.buffalo.cse562;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.io.Serializable;
 import java.sql.Date;
 import java.util.Locale;
 
-public class Datum {
+public class Datum implements Serializable {
 	String element;
 	
 	Datum (String element){

@@ -1,9 +1,10 @@
 package edu.buffalo.cse562;
+import java.io.Serializable;
 import java.util.Comparator;
 
 import com.sun.org.apache.xerces.internal.impl.dv.xs.DecimalDV;
 
-public class SortableTuple implements Comparator<SortableTuple> {
+public class SortableTuple implements Serializable,Comparator<SortableTuple> {
 	
 	Datum[] tuple;
 	public static ColumnInfo[] schema;

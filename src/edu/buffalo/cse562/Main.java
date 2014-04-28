@@ -5,6 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import jdbm.*;
+
+import jdbm.RecordManagerFactory;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
@@ -74,13 +77,22 @@ public class Main {
 						CreateTable currTable = (CreateTable)stmt;
 						String tableName = currTable.getTable().getName();
 						tables.put(tableName, currTable);
-						if(Main.build)
+						if(Main.build){
+							currTable.getTable().setName(tableName.toLowerCase());
 							Main.tableNames.add(currTable.getTable());
+						}
 					}
 					else if(stmt instanceof Select){
 						if(Main.build) {
 							FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
 							BuildIndex buildIndex = new BuildIndex(null,0);
+							try{
+								buildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+							}
+							catch(Exception e){
+								e.printStackTrace();
+							}
+							buildIndex.buildTableIndex();
 							for(Table s: tableNames){
 								fromscanner.visit(s);
 								Operator scanOperator = fromscanner.source;
@@ -92,9 +104,16 @@ public class Main {
 									e.printStackTrace();
 								}
 							}
+							buildIndex.indexFile.close();
 							return;
 						}
 						else {
+							try {
+								INLJOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+							}
+							catch(Exception e){
+								e.printStackTrace();
+							}
 							SelectBody select = ((Select)stmt).getSelectBody();
 							if(select instanceof PlainSelect){
 								PlainSelect pselect = (PlainSelect)select;

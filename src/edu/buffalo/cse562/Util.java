@@ -55,6 +55,65 @@ public class Util {
 	}
 	
 	/**
+	 * This method is used for Index Nested Loop Join.
+	 * 
+	 * @param firstTable
+	 * @param joinDetails
+	 * @param conditionsOnSingleTables
+	 * @param whereCondExpressions
+	 * @return
+	 */
+	public static Operator getJoinedOperatorINLJ(Operator firstTable,List<Join> joinDetails,ArrayList<Expression> conditionsOnSingleTables,ArrayList<Expression> whereCondExpressions) {
+		INLJOperator finalJoinedOperator = null;
+		for (Join currJoin : joinDetails) {
+			FromScanner tempFromScan = new FromScanner(Main.dataDir,Main.tables);
+			currJoin.getRightItem().accept(tempFromScan);
+			Operator tempTableOperator = tempFromScan.source;
+			((ScanOperator) tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(),conditionsOnSingleTables);
+			if (currJoin.isSimple()) {
+				if (finalJoinedOperator == null) {
+					Object[] whereJoinConditionDetails = new Object[] {};
+
+					finalJoinedOperator = new INLJOperator(firstTable,tempTableOperator, null);
+					whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(),tempTableOperator.getSchema(), whereCondExpressions);
+
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>) whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>) whereJoinConditionDetails[1];
+					finalJoinedOperator.indexLoad();
+				} else {
+					Object[] whereJoinConditionDetails = new Object[] {};
+					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
+
+					finalJoinedOperator = new INLJOperator(finalJoinedOperator,tempTableOperator, null);
+					whereJoinConditionDetails = getConditionsOfJoin(currFinalSchema, tempTableOperator.getSchema(),whereCondExpressions);
+
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>) whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>) whereJoinConditionDetails[1];
+					finalJoinedOperator.indexLoad();
+				}
+			}
+			Expression joinCondition = currJoin.getOnExpression();
+			if (joinCondition != null) {
+				if (finalJoinedOperator == null) {
+					finalJoinedOperator = new INLJOperator(firstTable,tempTableOperator, null);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(firstTable.getSchema(),tempTableOperator.getSchema(), whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>) whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>) whereJoinConditionDetails[1];
+					finalJoinedOperator.indexLoad();
+				} else {
+					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
+					finalJoinedOperator = new INLJOperator(finalJoinedOperator,tempTableOperator, null);
+					Object[] whereJoinConditionDetails = getConditionsOfJoin(currFinalSchema, tempTableOperator.getSchema(),whereCondExpressions);
+					finalJoinedOperator.whereJoinCondition = (ArrayList<Expression>) whereJoinConditionDetails[0];
+					finalJoinedOperator.whereJoinIndexes = (ArrayList<Integer[]>) whereJoinConditionDetails[1];
+					finalJoinedOperator.indexLoad();
+				}
+			}
+		}
+		return finalJoinedOperator;
+	}
+	
+	/**
 	 * Reads tuples from the inputOperator and prints it to the console
 	 * @param inputOperator - operator to read tuples from
 	 * @param count - limit on the number of tuples to print
@@ -335,7 +394,7 @@ public class Util {
 			if(currExpression instanceof AndExpression){
 				AndExpression andExp = (AndExpression) currExpression;
 				Expression rightExp = andExp.getRightExpression();
-				if(isSingleTableConditionExpression(rightExp)){
+				if(isSingleTableConditionExpression(rightExp)&&false){
 					conditionsOnSingleTables.add(rightExp);
 				}
 				else{
@@ -343,7 +402,7 @@ public class Util {
 				}
 				currExpression = andExp.getLeftExpression();				
 			}
-			else if(isSingleTableConditionExpression(currExpression)){
+			else if(isSingleTableConditionExpression(currExpression)&&false){
 				conditionsOnSingleTables.add(currExpression);
 				break;
 			}
