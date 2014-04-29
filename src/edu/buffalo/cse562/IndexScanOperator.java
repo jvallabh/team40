@@ -10,6 +10,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 
+import jdbm.RecordManager;
+import jdbm.btree.BTree;
+
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
@@ -36,6 +39,9 @@ public class IndexScanOperator implements Operator {
 	Expression currCondition;
 	Expression indexCondition;
 	boolean hasIndex;
+	static RecordManager indexFile;
+	BTree tree;
+	int index;
 	
 	public IndexScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
@@ -47,6 +53,12 @@ public class IndexScanOperator implements Operator {
 	@Override
 	public Datum[] readOneTuple() {
 		if (hasIndex) {
+			try {
+				tree = BTree.load(indexFile,indexFile.getNamedObject(schema[0].origTableName+"_"+ schema[0].colDef.getColumnName()));
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 			//have to send the tuples based on Index
 			return null;
 		} else {
@@ -98,17 +110,29 @@ public class IndexScanOperator implements Operator {
 				Expression currExp = iterator.next();
 				if (currExp instanceof EqualsTo) {
 					hasIndex = true;
+					index = eval.colHash.get(((EqualsTo)currExp).getLeftExpression());
+							
 					return currExp;
 				}
 			}
 			iterator = conditions.iterator();
 			while (iterator.hasNext()) {
 				Expression currExp = iterator.next();
-				if ((currExp instanceof MinorThan)
-					|| (currExp instanceof MinorThanEquals)
-					|| (currExp instanceof GreaterThan)
-					|| (currExp instanceof GreaterThanEquals)) {
+				if (currExp instanceof MinorThan) {
 					hasIndex = true;
+					index = eval.colHash.get(((MinorThan)currExp).getLeftExpression());
+					return currExp;					
+				} else if (currExp instanceof MinorThanEquals) {
+					hasIndex = true;
+					index = eval.colHash.get(((MinorThanEquals)currExp).getLeftExpression());
+					return currExp;					
+				} else if (currExp instanceof GreaterThan) {
+					hasIndex = true;
+					index = eval.colHash.get(((GreaterThan)currExp).getLeftExpression());
+					return currExp;					
+				} else if (currExp instanceof GreaterThanEquals) {
+					hasIndex = true;
+					index = eval.colHash.get(((GreaterThanEquals)currExp).getLeftExpression());
 					return currExp;
 				}
 			}
