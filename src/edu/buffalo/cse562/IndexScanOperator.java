@@ -73,6 +73,7 @@ public class IndexScanOperator implements Operator {
 				else if(indexType == 2){
 					((MinorThanEquals)indexCondition).getRightExpression().accept(eval);
 					browser = tree.browse(new Datum(eval.getValue()));
+					ArrayList<Datum[]> tupleList= (ArrayList<Datum[]>) tree.find(new Datum(eval.getValue()));
 					browser.getNext(tuple);
 				}
 				else if(indexType == 3){

@@ -35,7 +35,7 @@ public class SortableTuple implements Serializable,Comparator<SortableTuple> {
 				x  = orderIndex[j]*Integer.compare(Integer.parseInt(arg0.tuple[i].element),Integer.parseInt(arg1.tuple[i].element));
 			}				 
 			else if(colDataType.equalsIgnoreCase("string") || colDataType.equalsIgnoreCase("VARCHAR") || colDataType.equalsIgnoreCase("CHAR")){
-				x  =orderIndex[j]*arg0.tuple[i].toString().compareTo(arg1.tuple[i].element);
+				x  =orderIndex[j]*arg0.tuple[i].element.compareTo(arg1.tuple[i].element);
 			}				 
 			else if(colDataType.equalsIgnoreCase("date")){
 				x  =orderIndex[j]*arg0.tuple[i].Date().compareTo(arg1.tuple[i].Date());
