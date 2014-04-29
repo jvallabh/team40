@@ -394,7 +394,7 @@ public class Util {
 			if(currExpression instanceof AndExpression){
 				AndExpression andExp = (AndExpression) currExpression;
 				Expression rightExp = andExp.getRightExpression();
-				if(isSingleTableConditionExpression(rightExp)){
+				if(isSingleTableConditionExpression(rightExp)&&false){
 					conditionsOnSingleTables.add(rightExp);
 				}
 				else{
@@ -402,7 +402,7 @@ public class Util {
 				}
 				currExpression = andExp.getLeftExpression();				
 			}
-			else if(isSingleTableConditionExpression(currExpression)){
+			else if(isSingleTableConditionExpression(currExpression)&&false){
 				conditionsOnSingleTables.add(currExpression);
 				break;
 			}
@@ -454,13 +454,22 @@ public class Util {
 			currRight = ((MinorThanEquals) inputExp).getRightExpression();			
 		}
 		else if(inputExp instanceof Parenthesis){
-			if(((Parenthesis)inputExp).getExpression() instanceof OrExpression && isSingleTableOrExpression((OrExpression)((Parenthesis)inputExp).getExpression())){
-				return true;
-			}
-			else{
+			inputExp = ((Parenthesis)inputExp).getExpression();
+			if(inputExp instanceof OrExpression){
+				return (isSingleTableConditionExpression(((OrExpression)inputExp).getLeftExpression()) &&
+						isSingleTableConditionExpression(((OrExpression)inputExp).getRightExpression()));
+			} else if(inputExp instanceof AndExpression){
+				return (isSingleTableConditionExpression(((AndExpression)inputExp).getLeftExpression()) &&
+						isSingleTableConditionExpression(((AndExpression)inputExp).getRightExpression()));
+			} else {
 				return false;
 			}
+			
+		} 
+		else {
+			return false;
 		}
+		
 		
 		if(currLeft instanceof Column && !(currRight instanceof Column)){
 			/*This is to handle conditions like
@@ -495,42 +504,6 @@ public class Util {
 			}
 		}
 		return false;		
-	}
-	
-	/**
-	 * This method is useful in identifying following type expressions in where clause
-	 * (lineitem.shipmode='AIR' or lineitem.shipmode='MAIL' or lineitem.shipmode='TRUCK' or lineitem.shipmode='SHIP')
-	 * @param expr
-	 * @return
-	 */
-	public static boolean isSingleTableOrExpression(OrExpression expr){
-		Expression currExpression = expr;
-		String tableName = null;
-		while(currExpression instanceof OrExpression){
-			OrExpression currOrExp = (OrExpression)currExpression;
-			Expression currRightExp = currOrExp.getRightExpression();
-			if(currRightExp instanceof EqualsTo){
-				Expression currLeft = ((EqualsTo) currRightExp).getLeftExpression();
-				Expression currRight = ((EqualsTo) currRightExp).getRightExpression();
-				if(currLeft instanceof Column && !(currRight instanceof Column)){
-			      String currTableName = ((Column)currLeft).getTable().getName();
-			      if(tableName == null){
-			    	  tableName = currTableName;
-			      }
-			      else if(!tableName.equals(currTableName)){
-			    	  return false;
-			      }
-				}
-				else{
-					return false;
-				}
-			}
-			else{
-				return false;
-			}
-			currExpression = currOrExp.getLeftExpression();
-		}
-		return true;
 	}
 	
 	/**
