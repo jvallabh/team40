@@ -24,14 +24,14 @@ public class BuildIndex {
 	}
 	
 	public void buildTableIndex(){
-		tableIndex.put("lineitem", new int[]{0,2});
-		tableIndex.put("orders", new int[]{0,1});
-		tableIndex.put("customer", new int[]{0,3});
-		tableIndex.put("supplier", new int[]{0,3});
-		tableIndex.put("nation", new int[]{0,2});
-		tableIndex.put("part", new int[]{0});
-		tableIndex.put("partsupp", new int[]{0});
-		tableIndex.put("region", new int[]{0});
+        tableIndex.put("lineitem", new int[]{0,2,10});
+        tableIndex.put("orders", new int[]{0,1});
+        tableIndex.put("customer", new int[]{0,3});
+        tableIndex.put("supplier", new int[]{0,3});
+        tableIndex.put("nation", new int[]{0,2});
+        tableIndex.put("part", new int[]{0});
+        tableIndex.put("partsupp", new int[]{0});
+        tableIndex.put("region", new int[]{0});
 	}
 	
 	public void buildIndex() throws Exception{

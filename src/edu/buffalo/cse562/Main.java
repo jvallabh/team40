@@ -4,10 +4,15 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
+
 import jdbm.*;
 
 import jdbm.RecordManagerFactory;
+import jdbm.btree.BTree;
+import jdbm.helper.TupleBrowser;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
@@ -94,7 +99,7 @@ public class Main {
 							BuildIndex buildIndex = new BuildIndex(null,0);
 							buildIndex.buildTableIndex();
 							for(Table s: tableNames){
-								fromscanner.visit(s);
+								fromscanner.visitForBuild(s);
 								Operator scanOperator = fromscanner.source;
 								buildIndex.input = scanOperator;
 								try {
@@ -109,7 +114,7 @@ public class Main {
 						}
 						else {
 							try {
-								INLJOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+								IndexScanOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
 							}
 							catch(Exception e){
 								e.printStackTrace();
@@ -128,6 +133,7 @@ public class Main {
 									Util.printOutputTuples(resultOperator);
 								}												
 							}
+							IndexScanOperator.indexFile.close();
 						}
 					}
 				}

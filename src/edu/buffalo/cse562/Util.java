@@ -210,7 +210,8 @@ public class Util {
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
 			currJoin.getRightItem().accept(tempFromScan);
 			Operator tempTableOperator = tempFromScan.source;
-			((ScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
+			((IndexScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
+			((IndexScanOperator)tempTableOperator).processIndexScan();
 			if(currJoin.isSimple()){
 				if(finalJoinedOperator == null){
 					Object[] whereJoinConditionDetails = new Object[]{}; 
@@ -394,7 +395,7 @@ public class Util {
 			if(currExpression instanceof AndExpression){
 				AndExpression andExp = (AndExpression) currExpression;
 				Expression rightExp = andExp.getRightExpression();
-				if(isSingleTableConditionExpression(rightExp)&&false){
+				if(isSingleTableConditionExpression(rightExp)&&!Main.build){
 					conditionsOnSingleTables.add(rightExp);
 				}
 				else{
@@ -402,7 +403,7 @@ public class Util {
 				}
 				currExpression = andExp.getLeftExpression();				
 			}
-			else if(isSingleTableConditionExpression(currExpression)&&false){
+			else if(isSingleTableConditionExpression(currExpression)&&!Main.build){
 				conditionsOnSingleTables.add(currExpression);
 				break;
 			}
