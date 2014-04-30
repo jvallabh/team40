@@ -3,9 +3,13 @@
  */
 package edu.buffalo.cse562;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import net.sf.jsqlparser.expression.Expression;
@@ -31,7 +35,7 @@ public class HashJoin implements Operator {
 	ArrayList<Integer[]> whereJoinIndexes;
 	int ind1=0;
 	int ind2=0;
-	Map<String, List<Datum[]>> map = new HashMap<String, List<Datum[]>>();
+	LinkedHashMap<String, ArrayList<Datum[]>> map = new LinkedHashMap<String, ArrayList<Datum[]>>();
 	
 	public HashJoin(Operator input1, Operator input2, Expression condition){
 		this.input1 = input1;
@@ -43,7 +47,7 @@ public class HashJoin implements Operator {
     
 	public void buildHash()
 	{
-		ind1 = whereJoinIndexes.get(0)[0];
+	/*	ind1 = whereJoinIndexes.get(0)[0];
 		ind2 = whereJoinIndexes.get(0)[1];
 		Datum[] tuple3 = input1.readOneTuple();
 		while(tuple3!=null)
@@ -59,7 +63,18 @@ public class HashJoin implements Operator {
 		        map.put(tuple3[ind1].element, tuples);
 		    }
 		  tuple3 = input1.readOneTuple();
-		}
+		  */
+		try{
+		    File file = new File(Main.indexDir+input1.getSchema()[ind1].tableName+input1.getSchema()[ind1].colDef.getColumnName());
+		    FileInputStream f = new FileInputStream(file);
+		    ObjectInputStream s = new ObjectInputStream(f);
+		    map = new LinkedHashMap<String, ArrayList<Datum[]>>();
+		    map = (LinkedHashMap<String, ArrayList<Datum[]>>)s.readObject();
+		    s.close();
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 		
 
 		/*ind1 = whereJoinIndexes.get(0)[0];

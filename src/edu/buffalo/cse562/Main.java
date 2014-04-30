@@ -89,27 +89,14 @@ public class Main {
 					}
 					else if(stmt instanceof Select){
 						if(Main.build) {
-							try{
-								BuildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
-							}
-							catch(Exception e){
-								e.printStackTrace();
-							}
 							FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
-							BuildIndex buildIndex = new BuildIndex(null,0);
-							buildIndex.buildTableIndex();
+							HashIndex.buildTableIndex();
 							for(Table s: tableNames){
 								fromscanner.visitForBuild(s);
 								Operator scanOperator = fromscanner.source;
-								buildIndex.input = scanOperator;
-								try {
-									buildIndex.buildIndex();
-								}
-								catch(Exception e){
-									e.printStackTrace();
-								}
+								HashIndex hashIndex = new HashIndex(scanOperator);
+								hashIndex.buildIndex();
 							}
-							BuildIndex.indexFile.close();
 							return;
 						}
 						else {
