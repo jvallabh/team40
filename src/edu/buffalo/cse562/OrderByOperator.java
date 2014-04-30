@@ -108,6 +108,9 @@ public class OrderByOperator implements Operator {
 				if(currColumnTable != null){
 					columnMatch = schema[j].tableName.equalsIgnoreCase(currColumnTable) && schema[j].colDef.getColumnName().equalsIgnoreCase(currColumnName);
 				}
+				else if(schema[j].functionType==6){
+					columnMatch = true;
+				}
 				else{
 					columnMatch = schema[j].colDef.getColumnName().equalsIgnoreCase(currColumnName);
 				}

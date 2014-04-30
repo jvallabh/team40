@@ -204,8 +204,11 @@ public class ExternalSortOperator implements Operator{
 			String currColumnTable = currColumn.getTable().getName();
 			for(int j=0;j<schema.length;j++){
 				boolean columnMatch = false;
-				if(currColumnTable != null){
+				if(currColumnTable != null && !schema[j].tableName.equals("dummy")){
 					columnMatch = schema[j].tableName.equalsIgnoreCase(currColumnTable) && schema[j].colDef.getColumnName().equalsIgnoreCase(currColumnName);
+				}
+				else if(schema[j].functionType==6){
+					columnMatch = true;
 				}
 				else{
 					columnMatch = schema[j].colDef.getColumnName().equalsIgnoreCase(currColumnName);
