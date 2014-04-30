@@ -50,9 +50,8 @@ public class SelectProcessor {
 		Operator firstTableOperator = fromscan.source;
 		
 		//Incase of subSelect, we will get final resultant operator like project operator.
-		if(firstTableOperator instanceof IndexScanOperator){
-			((IndexScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
-			((IndexScanOperator)firstTableOperator).processIndexScan();
+		if(firstTableOperator instanceof ScanOperator){
+			((ScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
 		}		
 									
 		/*
@@ -122,7 +121,7 @@ public class SelectProcessor {
 		projectOperator = new ProjectionOperator(selectOperator,selectOperator.getSchema(),selectItems);
 		
 		if(hasGroupBy){
-			if(Main.swapDir==null)
+			if(true)
 				finalGrpByOperator = Util.getGroupByOperator(projectOperator, groupByColumns);
 			else
 				finalGrpByOperator = Util.getGroupByOperatorExternalSort(projectOperator,groupByColumns);
@@ -139,7 +138,7 @@ public class SelectProcessor {
 		AggrOperator aggrOperator = new AggrOperator(inputToAggr,inputToAggr.getSchema(),selectItems);
 		
 		if(hasOrderBy && !Util.isOrderBySameAsGroupBy(orderByColumns, groupByColumns)){
-			if(Main.swapDir==null)
+			if(true)
 				finalOrderByOperator = new OrderByOperator(aggrOperator, orderByColumns);
 			else
 				finalOrderByOperator = new ExternalSortOperator(aggrOperator, orderByColumns, Main.swapDir, -1);
