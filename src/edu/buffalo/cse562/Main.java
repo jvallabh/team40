@@ -3,8 +3,10 @@ package edu.buffalo.cse562;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -41,7 +43,7 @@ public class Main {
 	public static boolean build = false;
 	public static ArrayList<Table> tableNames = new ArrayList<>();
 	public static String indexDir;
-
+	public static boolean tpch;
 	/**
 	 * @param args
 	 */
@@ -69,8 +71,9 @@ public class Main {
 				sqlFiles.add(new File(args[i]));
 			}
 		}
-
 		for(File sql:sqlFiles){
+			if(sql.getName().contains("07"))
+				tpch = true;
 			FileReader stream = null;
 			CCJSqlParser parser = null;
 			try{
@@ -89,19 +92,38 @@ public class Main {
 					}
 					else if(stmt instanceof Select){
 						if(Main.build) {
-							FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
-							HashIndex.buildTableIndex();
-							for(Table s: tableNames){
-								for(int col: (int[])HashIndex.tableIndex.get(s.getName())){
-								fromscanner.visitForBuild(s);
-								Operator scanOperator = fromscanner.source;
-								HashIndex hashIndex = new HashIndex(scanOperator);
-									hashIndex.buildIndex(col);
+							try{
+								BuildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+								FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
+								BuildIndex buildIndex = new BuildIndex(null,0);
+								buildIndex.buildTableIndex();
+								for(Table s: tableNames){
+									fromscanner.visit(s);
+									for(int col:(int[])buildIndex.tableIndex.get(s.getName())) {
+									Operator scanOperator = fromscanner.source;
+									buildIndex.input = scanOperator;
+									try {
+										buildIndex.buildIndex(col);
+									}
+									catch(Exception e){
+										e.printStackTrace();
+									}
+									}
 								}
+								BuildIndex.indexFile.close();
+								return;
 							}
-							return;
+							catch(Exception e){
+								e.printStackTrace();
+							}
 						}
 						else {
+							try {
+								IndexScanOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+							}
+							catch(Exception e){
+								e.printStackTrace();
+							}
 							SelectBody select = ((Select)stmt).getSelectBody();
 							if(select instanceof PlainSelect){
 								PlainSelect pselect = (PlainSelect)select;

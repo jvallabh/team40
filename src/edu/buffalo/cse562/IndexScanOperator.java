@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+
+import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
 import jdbm.btree.BTree;
 import jdbm.btree.BTree;
@@ -41,14 +43,16 @@ public class IndexScanOperator implements Operator {
 	Iterator<Expression> iterator;
 	Expression currCondition;
 	Expression indexCondition;
-	int indexType;
+	int indexType=-1;
 	static RecordManager indexFile;
-	BTree tree;
+	PrimaryTreeMap<String, ArrayList<String>> tree;
+	String[] iterList;
 	int index;
 	TupleBrowser browser;
 	boolean exitCondition;
-	Iterator<Datum[]> iter;
+	Iterator<String> iter;
 	jdbm.helper.Tuple tuple = new jdbm.helper.Tuple();
+	int where;
 	
 	public IndexScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
@@ -61,32 +65,32 @@ public class IndexScanOperator implements Operator {
 		indexCondition = getIndexCondition();
 		if(indexType!=-1){
 			try {
-				tree = BTree.load(indexFile,indexFile.getNamedObject(schema[index].origTableName+"_"+ schema[index].colDef.getColumnName()));
+				tree = indexFile.treeMap(this.schema[index].tableName+"_"+this.schema[index].colDef.getColumnName());
+				iterList = new String[tree.size()];
+				tree.keySet().toArray(iterList);
 				if(indexType == 0){
 					((EqualsTo)indexCondition).getRightExpression().accept(eval);
-					browser = tree.browse(new Datum(eval.getValue()));
+					where = new ArrayList(tree.keySet()).indexOf(eval.getValue());
 				}
 				else if(indexType == 1){
 					((MinorThan)indexCondition).getRightExpression().accept(eval);
-					browser = tree.browse(new Datum(eval.getValue()));
+					where = searchKey(eval.getValue());
 				}
 				else if(indexType == 2){
 					((MinorThanEquals)indexCondition).getRightExpression().accept(eval);
-					browser = tree.browse(new Datum(eval.getValue()));
-					ArrayList<Datum[]> tupleList= (ArrayList<Datum[]>) tree.find(new Datum(eval.getValue()));
-					browser.getNext(tuple);
+					where = searchKey(eval.getValue());
 				}
 				else if(indexType == 3){
 					((GreaterThan)indexCondition).getRightExpression().accept(eval);
-					browser = tree.browse(new Datum(eval.getValue()));
-					browser.getNext(tuple);
+					where = searchKey(eval.getValue());
+					where++;
 				}
 				else{
 					((GreaterThanEquals)indexCondition).getRightExpression().accept(eval);
-					browser = tree.browse(new Datum(eval.getValue()));
+					where = searchKey(eval.getValue());
 				}
 					
-			} catch (IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
@@ -221,15 +225,45 @@ public class IndexScanOperator implements Operator {
 	public Datum[] lessThanTuple() throws IOException{
 		while(!exitCondition){
 			if(iter==null){
-				if(browser.getPrevious(tuple)){
-					ArrayList<Datum[]> tupleList = (ArrayList<Datum[]>) tuple.getValue();
+				int i=0;
+				ArrayList<String> tupleList =tree.get(iterList[where]);
+				where--;
+				iter = tupleList.iterator();
+				while(iter.hasNext()) {
+					String obj = iter.next();
+					Datum[] tuples = toDatum(obj);
+					return tuples;
+				}
+			}
+			else {
+				while(iter.hasNext()) {
+					String obj = iter.next();
+					Datum[] tuples = toDatum(obj);
+					return tuples;
+				}
+				iter=null;
+			}
+			if(where<0)
+				exitCondition = true;
+		}
+		return null;
+	}
+	
+	public Datum[] equalTuple() throws IOException{
+		while(!exitCondition){
+			if(iter==null){
+				if(tree.containsKey(eval.getValue())){
+					int i=0;
+					ArrayList<String> tupleList = tree.get(iterList[where]);
+					where--;
 					iter = tupleList.iterator();
 					while(iter.hasNext()) {
-						Object[] obj = iter.next();
-						Datum[] tuples = Arrays.asList(obj).toArray(new Datum[obj.length]);
+						String obj = iter.next();
+						Datum[] tuples = toDatum(obj);
 						return tuples;
 					}
 					iter=null;
+					exitCondition = true;
 				}
 				else {
 					exitCondition = true;
@@ -237,11 +271,11 @@ public class IndexScanOperator implements Operator {
 			}
 			else {
 				while(iter.hasNext()) {
-					Object[] obj = iter.next();
-					Datum[] tuples = Arrays.asList(obj).toArray(new Datum[obj.length]);
+					String obj = iter.next();
+					Datum[] tuples = toDatum(obj);
 					return tuples;
 				}
-				iter=null;
+				exitCondition = true;
 			}
 		}
 		return null;
@@ -250,59 +284,69 @@ public class IndexScanOperator implements Operator {
 	public Datum[] greaterThanTuple() throws IOException{
 		while(!exitCondition){
 			if(iter==null){
-				if(browser.getNext(tuple)){
-					ArrayList<Datum[]> tupleList = (ArrayList<Datum[]>) tuple.getValue();
-					iter = tupleList.iterator();
-					while(iter.hasNext()) {
-						Object[] obj = iter.next();
-						Datum[] tuples = Arrays.asList(obj).toArray(new Datum[obj.length]);
-						return tuples;
-					}
-					iter=null;
-				}
-				else {
-					exitCondition = true;
+				int i=0;
+				ArrayList<String> tupleList = tree.get(iterList[where]);
+				where++;
+				iter = tupleList.iterator();
+				while(iter.hasNext()) {
+					String obj = iter.next();
+					Datum[] tuples = toDatum(obj);
+					return tuples;
 				}
 			}
 			else {
 				while(iter.hasNext()) {
-					Object[] obj = iter.next();
-					Datum[] tuples = Arrays.asList(obj).toArray(new Datum[obj.length]);
+					String obj = iter.next();
+					Datum[] tuples = toDatum(obj);
 					return tuples;
 				}
 				iter=null;
 			}
+			if(where == iterList.length)
+				exitCondition = true;
 		}
 		return null;
 	}
 	
-	public Datum[] equalTuple() throws IOException{
-		while(!exitCondition){
-			if(iter==null){
-				if(browser.getNext(tuple)){
-					ArrayList<Datum[]> tupleList = (ArrayList<Datum[]>) tuple.getValue();
-					iter = tupleList.iterator();
-					while(iter.hasNext()) {
-						Object[] obj = iter.next();
-						Datum[] tuples = Arrays.asList(obj).toArray(new Datum[obj.length]);
-						return tuples;
-					}
-					iter=null;
-					exitCondition = true;
-				}
-				else {
-					exitCondition = true;
-				}
-			}
-			else {
-				while(iter.hasNext()) {
-					Object[] obj = iter.next();
-					Datum[] tuples = Arrays.asList(obj).toArray(new Datum[obj.length]);
-					return tuples;
-				}
-				exitCondition = true;
-			}
+	
+	
+	public int searchKey(String value){
+		ArrayList<String> list = new ArrayList(tree.keySet());
+		int i,start=0,end=list.size();
+		i=(start+end)/2;
+		int compare;
+		while(i>start&&i<end){
+			compare = value.compareTo(list.get(i));
+			if(compare==0)
+				return i;
+			else if(compare<0)
+				end = i;
+			else 
+				start = i;
+			i=(start+end)/2;
+			if(i==start||i==end)
+				return i;
 		}
-		return null;
+		return i;
+	}
+	
+	public Datum[] toDatum(String[] tuple){
+		Datum[] d = new Datum[tuple.length];
+		int i=0;
+		for(String s: tuple){
+			d[i] = new Datum(s);
+			i++;
+		}
+		return d;
+	}
+	
+	public Datum[] toDatum(String line){
+		String[] cols = line.split("\\|");
+		Datum[] ret = new Datum[cols.length];
+		for (int i=0; i<cols.length; i++) {
+			//ret[i] = new Datum.Long(cols[i]);
+			ret[i] = new Datum(cols[i]);
+		}
+		return ret;
 	}
 }
