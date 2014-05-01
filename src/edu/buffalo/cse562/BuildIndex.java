@@ -13,7 +13,7 @@ import jdbm.*;
 import jdbm.btree.BTree;
 
 public class BuildIndex {
-	BTree tree;
+	PrimaryTreeMap<String, ArrayList<String>> tree;
 	Operator input;
 	int index;
 	ColumnInfo[] schema;
@@ -53,7 +53,7 @@ public class BuildIndex {
 			tuple1 = input.readOneTuple();
 		}
 		Collections.sort(sortableTuples,new SortableTuple(null));
-		PrimaryTreeMap<String, ArrayList<String>> tree = indexFile.treeMap(this.schema[col].tableName+"_"+this.schema[col].colDef.getColumnName());
+		tree = indexFile.treeMap(this.schema[col].tableName+"_"+this.schema[col].colDef.getColumnName());
 		for(SortableTuple sTuple: sortableTuples){
 			if(tree.containsKey(sTuple.tuple[col].element))
 				tree.get(sTuple.tuple[col].element).add(toDatumString(toStringFromDatum(sTuple.tuple)));
