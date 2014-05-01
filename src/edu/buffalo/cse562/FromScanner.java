@@ -48,7 +48,7 @@ public class FromScanner implements FromItemVisitor {
 			String tableNameEffective=tableName.getAlias() != null?tableName.getAlias():tableName.getName();
 			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective,0,origTableName);
 		}
-		source = new ScanOperator(new File(basePath, tableName.getName()+".dat"), schema);
+		source = new HashIndexScan(new File(basePath, tableName.getName()+".dat"), schema);
 		
 	}
 	

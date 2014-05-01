@@ -210,11 +210,12 @@ public class Util {
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
 			currJoin.getRightItem().accept(tempFromScan);
 			Operator tempTableOperator = tempFromScan.source;
-			((ScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
+			((HashIndexScan)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
+			((HashIndexScan)tempTableOperator).processHashIndex();
 			if(currJoin.isSimple()){
 				if(finalJoinedOperator == null){
 					Object[] whereJoinConditionDetails = new Object[]{}; 
-					if (isNotLineitem(tempTableOperator))
+					if (false)
 					{
 					finalJoinedOperator = new JoinOperator(tempTableOperator,firstTable, null);
 					 whereJoinConditionDetails = getConditionsOfJoin(tempTableOperator.getSchema(),firstTable.getSchema(),  whereCondExpressions);
@@ -232,7 +233,7 @@ public class Util {
 				else{
 					Object[] whereJoinConditionDetails = new Object[]{};
 					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
-					if (isNotLineitem(tempTableOperator))
+					if (false)
 					{
 					finalJoinedOperator = new JoinOperator(tempTableOperator,finalJoinedOperator, null);
 					 whereJoinConditionDetails = getConditionsOfJoin(tempTableOperator.getSchema(), currFinalSchema,  whereCondExpressions);
@@ -646,7 +647,7 @@ public class Util {
 	 * @return
 	 */
 	public static boolean isOrderBySameAsGroupBy(List<OrderByElement> orderByElements, List<Column> grpByCols){
-		if(grpByCols == null)
+		if(grpByCols != null)
 			return false;
 		for(int i=0;i<orderByElements.size();i++){
 			String orderByColumn = ((Column)(orderByElements.get(i).getExpression())).getColumnName();

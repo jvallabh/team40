@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -34,14 +35,13 @@ public class HashIndex {
 
 	}
 	
-	public void buildIndex() {
-		int col=0;
+	public void buildIndex(int col) {
 		SortableTuple.schema=schema;
 		SortableTuple.orderByColumnIndex=new int[]{col};
 		SortableTuple.orderIndex = new int[]{1};
 		Datum[] tuple = input.readOneTuple();
 		ArrayList<SortableTuple> sortableTuples = new ArrayList<SortableTuple>();
-		LinkedHashMap<String, ArrayList<Datum[]>> hashIndex = new LinkedHashMap<>();
+		LinkedHashMap<String, ArrayList<String[]>> hashIndex = new LinkedHashMap<String, ArrayList<String[]>>();
 		while(tuple!=null){
 			SortableTuple sortableTuple = new SortableTuple(tuple);
 			sortableTuples.add(sortableTuple);
@@ -50,13 +50,16 @@ public class HashIndex {
 		Collections.sort(sortableTuples, new SortableTuple(null));
 		for(SortableTuple sTuple: sortableTuples){
 			if(hashIndex.containsKey(sTuple.tuple[col].element))
-				hashIndex.get(sTuple.tuple[col].element).add(sTuple.tuple);
+				hashIndex.get(sTuple.tuple[col].element).add(toStringFromDatum(sTuple.tuple));
 			else {
-				ArrayList<Datum[]> tuples = new ArrayList<Datum[]>();
-				tuples.add(sTuple.tuple);
+				ArrayList<String[]> tuples = new ArrayList<String[]>();
+				tuples.add(toStringFromDatum(sTuple.tuple));
 				hashIndex.put(sTuple.tuple[col].element, tuples);	
 			}
 		}
+		if(hashIndex.containsKey("1"))
+			System.out.println("Yes I contain 1");
+		System.out.println(hashIndex.size());
 		try{
         File file = new File(Main.indexDir+schema[col].tableName+schema[col].colDef.getColumnName());
         FileOutputStream f = new FileOutputStream(file);
@@ -67,6 +70,17 @@ public class HashIndex {
 		catch(Exception e){
 			e.printStackTrace();
 		}
+		
+	}
+	
+	public String[] toStringFromDatum(Datum[] tuple){
+		String[] s = new String[tuple.length];
+		int i=0;
+		for(Datum d:tuple){
+			s[i] = d.element;
+			i++;
+		}
+		return s;
 	}
 
 }

@@ -50,8 +50,9 @@ public class SelectProcessor {
 		Operator firstTableOperator = fromscan.source;
 		
 		//Incase of subSelect, we will get final resultant operator like project operator.
-		if(firstTableOperator instanceof ScanOperator){
-			((ScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
+		if(firstTableOperator instanceof HashIndexScan){
+			((HashIndexScan)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
+			((HashIndexScan)firstTableOperator).processHashIndex();
 		}		
 									
 		/*

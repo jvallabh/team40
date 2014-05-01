@@ -92,20 +92,16 @@ public class Main {
 							FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
 							HashIndex.buildTableIndex();
 							for(Table s: tableNames){
+								for(int col: (int[])HashIndex.tableIndex.get(s.getName())){
 								fromscanner.visitForBuild(s);
 								Operator scanOperator = fromscanner.source;
 								HashIndex hashIndex = new HashIndex(scanOperator);
-								hashIndex.buildIndex();
+									hashIndex.buildIndex(col);
+								}
 							}
 							return;
 						}
 						else {
-							try {
-								IndexScanOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
-							}
-							catch(Exception e){
-								e.printStackTrace();
-							}
 							SelectBody select = ((Select)stmt).getSelectBody();
 							if(select instanceof PlainSelect){
 								PlainSelect pselect = (PlainSelect)select;
@@ -120,7 +116,6 @@ public class Main {
 									Util.printOutputTuples(resultOperator);
 								}												
 							}
-							IndexScanOperator.indexFile.close();
 						}
 					}
 				}
