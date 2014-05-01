@@ -210,8 +210,8 @@ public class Util {
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
 			currJoin.getRightItem().accept(tempFromScan);
 			Operator tempTableOperator = tempFromScan.source;
-			((HashIndexScan)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
-			((HashIndexScan)tempTableOperator).processHashIndex();
+			((IndexScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
+			((IndexScanOperator)tempTableOperator).processIndexScan();
 			if(currJoin.isSimple()){
 				if(finalJoinedOperator == null){
 					Object[] whereJoinConditionDetails = new Object[]{}; 
