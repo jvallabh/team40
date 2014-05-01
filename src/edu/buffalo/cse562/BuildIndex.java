@@ -115,4 +115,35 @@ public class BuildIndex {
 		}
 		return datumToString.substring(1);
 	}
+	
+	public static class ExampleComparator implements Serializable,
+	Comparator<Datum> {
+String type;
+int x;
+
+	public ExampleComparator(String type) {
+		this.type = type;
+	}
+
+	public int compare(Datum obj1, Datum obj2) {
+	
+		if (type.equalsIgnoreCase("int"))
+			x = Integer.compare(Integer.parseInt(obj1.element),
+					Integer.parseInt(obj2.element));
+		else if (type.equalsIgnoreCase("DECIMAL"))
+			x = Double.compare(Double.parseDouble(obj1.element),
+					Double.parseDouble(obj2.element));
+		else if (type.equalsIgnoreCase("double"))
+			x = Double.compare(Double.parseDouble(obj1.element),
+					Double.parseDouble(obj2.element));
+		else if (type.equalsIgnoreCase("string")
+				|| type.equalsIgnoreCase("VARCHAR")
+				|| type.equalsIgnoreCase("CHAR"))
+			x = obj1.toString().compareTo(obj2.toString());
+		else if (type.equalsIgnoreCase("DATE"))
+			x = obj1.Date().compareTo(obj2.Date());
+		return x;
+	}
+	
+	}
 }
