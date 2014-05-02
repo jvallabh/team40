@@ -63,9 +63,7 @@ public class IndexScanOperator implements Operator {
 		this.eval = new Evaluator(schema);
 	}
 	
-	private Expression getGreaterThanWhereCondition(){
-		//Column Index in Schema
-		int columnIndexFound = eval.getColumnID(((Column)((MinorThanEquals)indexCondition).getLeftExpression()));
+	private Expression getGreaterThanWhereCondition(int columnIndexFound){
 		if(conditions.size() == 0) {
 			return null;
 		} else {
@@ -92,7 +90,8 @@ public class IndexScanOperator implements Operator {
 			where = getIndexInTree(index, indexType, firstIndexCondition);
 			if(firstIndexCondition instanceof MinorThanEquals && !(((MinorThanEquals)firstIndexCondition).getRightExpression() instanceof Column)){
 				whereKey = iterList[where+1];
-				Expression secondIndexCondition = getGreaterThanWhereCondition();
+				int columnId = eval.getColumnID(((Column)((MinorThanEquals)indexCondition).getLeftExpression()));
+				Expression secondIndexCondition = getGreaterThanWhereCondition(columnId);
 				if(secondIndexCondition != null){
 					hasBetween = true;
 					((GreaterThanEquals)secondIndexCondition).getRightExpression().accept(eval);
@@ -101,7 +100,20 @@ public class IndexScanOperator implements Operator {
 					iterList = new String[betweenMap.size()];
 					betweenMap.keySet().toArray(iterList);
 				}
-			}			
+			}
+			else if(firstIndexCondition instanceof MinorThan && !(((MinorThan)firstIndexCondition).getRightExpression() instanceof Column)){
+					whereKey = iterList[where];
+					int columnId = eval.getColumnID(((Column)((MinorThan)indexCondition).getLeftExpression()));
+					Expression secondIndexCondition = getGreaterThanWhereCondition(columnId);
+					if(secondIndexCondition != null){
+						hasBetween = true;
+						((GreaterThanEquals)secondIndexCondition).getRightExpression().accept(eval);
+						toKey = eval.getValue();
+						betweenMap= tree.subMap(toKey, whereKey);
+						iterList = new String[betweenMap.size()];
+						betweenMap.keySet().toArray(iterList);
+					}
+				}
 		}
 		/*
 		if(indexType!=-1){
@@ -371,8 +383,8 @@ public class IndexScanOperator implements Operator {
 			if(iter==null){
 				if(tree.containsKey(eval.getValue())){
 					int i=0;
-					ArrayList<String> tupleList = tree.get(iterList[where]);
-					where--;
+					ArrayList<String> tupleList = tree.get(eval.getValue());
+					//where--;
 					iter = tupleList.iterator();
 					while(iter.hasNext()) {
 						String obj = iter.next();

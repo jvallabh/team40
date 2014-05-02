@@ -27,10 +27,10 @@ public class BuildIndex {
 		tableIndex.put("orders", new int[] { 4 });
 		tableIndex.put("customer", new int[] { 6 });
 		tableIndex.put("region", new int[] { 1 });
-	//	tableIndex.put("supplier", new int[] { 3 });
-	//	tableIndex.put("nation", new int[] { 0, 2 });
-	//	tableIndex.put("part", new int[] { 3, 5 });
-	//	tableIndex.put("partsupp", new int[] { 0 });
+	    tableIndex.put("supplier", new int[] { 3 });
+	    tableIndex.put("nation", new int[] { 0, 2 });
+		tableIndex.put("part", new int[] { 3, 5 });
+		tableIndex.put("partsupp", new int[] { 0 });
 	}
 	
 	public void buildIndex(int col) throws Exception{
