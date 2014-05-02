@@ -91,19 +91,19 @@ public class Main {
 					else if(stmt instanceof Select){
 						if(Main.build) {
 							try{
-								BuildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index");
 								FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
-								BuildIndex buildIndex = new BuildIndex(null,0);
-								buildIndex.buildTableIndex();
 								for(Table s: tableNames){
+									BuildIndex buildIndex = new BuildIndex(null,0);
+									buildIndex.buildTableIndex();
+									buildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+s);
 									fromscanner.visit(s);
 									for(int col:(int[])buildIndex.tableIndex.get(s.getName())) {
 									Operator scanOperator = fromscanner.source;
 									buildIndex.input = scanOperator;
 										buildIndex.buildIndex(col);
 									}
+									buildIndex.indexFile.close();
 								}
-								BuildIndex.indexFile.close();
 								return;
 							}
 							catch(Exception e){
@@ -111,12 +111,6 @@ public class Main {
 							}
 						}
 						else {
-							try {
-								IndexScanOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index");
-							}
-							catch(Exception e){
-								e.printStackTrace();
-							}
 							SelectBody select = ((Select)stmt).getSelectBody();
 							if(select instanceof PlainSelect){
 								PlainSelect pselect = (PlainSelect)select;

@@ -13,6 +13,7 @@ import java.util.SortedMap;
 
 import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
+import jdbm.RecordManagerFactory;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -42,7 +43,7 @@ public class IndexScanOperator implements Operator {
 	Expression currCondition;
 	Expression indexCondition;
 	int indexType=-1;
-	static RecordManager indexFile;
+	RecordManager indexFile;
 	PrimaryTreeMap<String, ArrayList<String>> tree;
 	SortedMap<String,ArrayList<String>> betweenMap;
 	String[] iterList;
@@ -139,7 +140,17 @@ public class IndexScanOperator implements Operator {
 	
 	private int getIndexInTree(int schemaIndex, int indexType, Expression condition_){
 		int indexInTree = -1;
+		String tableName;
 		try {
+			tableName = this.schema[schemaIndex].origTableName;
+			if(tableName==null)
+				tableName = this.schema[schemaIndex].tableName;
+			try{
+				indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+tableName);
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 			tree = indexFile.treeMap(this.schema[schemaIndex].tableName+"_"+this.schema[schemaIndex].colDef.getColumnName());
 			iterList = new String[tree.size()];
 			tree.keySet().toArray(iterList);

@@ -13,7 +13,7 @@ public class BuildIndex {
 	Operator input;
 	int index;
 	ColumnInfo[] schema;
-	static RecordManager indexFile;
+	RecordManager indexFile;
 	HashMap<String,int[]> tableIndex = new HashMap<String,int[]>();
 	HashMap<String,ArrayList<String>> tmp = new HashMap<String,ArrayList<String>>();
 	
