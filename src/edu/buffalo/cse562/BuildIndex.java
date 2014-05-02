@@ -117,7 +117,7 @@ public class BuildIndex {
 	}
 	
 	public static class ExampleComparator implements Serializable,
-	Comparator<Datum> {
+	Comparator<String> {
 String type;
 int x;
 
@@ -125,23 +125,23 @@ int x;
 		this.type = type;
 	}
 
-	public int compare(Datum obj1, Datum obj2) {
+	public int compare(String obj1, String obj2) {
 	
 		if (type.equalsIgnoreCase("int"))
-			x = Integer.compare(Integer.parseInt(obj1.element),
-					Integer.parseInt(obj2.element));
+			x = Integer.compare(Integer.parseInt(obj1),
+					Integer.parseInt(obj2));
 		else if (type.equalsIgnoreCase("DECIMAL"))
-			x = Double.compare(Double.parseDouble(obj1.element),
-					Double.parseDouble(obj2.element));
+			x = Double.compare(Double.parseDouble(obj1),
+					Double.parseDouble(obj2));
 		else if (type.equalsIgnoreCase("double"))
-			x = Double.compare(Double.parseDouble(obj1.element),
-					Double.parseDouble(obj2.element));
+			x = Double.compare(Double.parseDouble(obj1),
+					Double.parseDouble(obj2));
 		else if (type.equalsIgnoreCase("string")
 				|| type.equalsIgnoreCase("VARCHAR")
 				|| type.equalsIgnoreCase("CHAR"))
 			x = obj1.toString().compareTo(obj2.toString());
 		else if (type.equalsIgnoreCase("DATE"))
-			x = obj1.Date().compareTo(obj2.Date());
+			x = obj1.compareTo(obj2);
 		return x;
 	}
 	
