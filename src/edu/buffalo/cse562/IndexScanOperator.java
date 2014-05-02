@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.SortedMap;
 
 import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
@@ -19,6 +20,7 @@ import jdbm.helper.TupleBrowser;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
+import net.sf.jsqlparser.expression.operators.relational.Between;
 import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThan;
 import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
@@ -46,6 +48,7 @@ public class IndexScanOperator implements Operator {
 	int indexType=-1;
 	static RecordManager indexFile;
 	PrimaryTreeMap<String, ArrayList<String>> tree;
+	SortedMap<String,ArrayList<String>> betweenMap;
 	String[] iterList;
 	int index;
 	TupleBrowser browser;
@@ -53,6 +56,10 @@ public class IndexScanOperator implements Operator {
 	Iterator<String> iter;
 	jdbm.helper.Tuple tuple = new jdbm.helper.Tuple();
 	int where;
+	int to;
+	String whereKey, toKey;
+	boolean hasBetween;
+	int betweenWhere = 0;
 	
 	public IndexScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
@@ -61,8 +68,47 @@ public class IndexScanOperator implements Operator {
 		this.eval = new Evaluator(schema);
 	}
 	
+	private Expression getGreaterThanWhereCondition(){
+		//Column Index in Schema
+		int columnIndexFound = eval.getColumnID(((Column)((MinorThanEquals)indexCondition).getLeftExpression()));
+		if(conditions.size() == 0) {
+			return null;
+		} else {
+			iterator = conditions.iterator();
+			while (iterator.hasNext()) {
+				Expression currExp = iterator.next();
+				if (currExp instanceof GreaterThanEquals && !(((GreaterThanEquals)currExp).getRightExpression() instanceof Column)) {
+					int currColindex = eval.getColumnID((Column) ((GreaterThanEquals)currExp).getLeftExpression());
+					if(columnIndexFound==currColindex){
+						iterator.remove();
+						return currExp;						
+					}					
+				}
+			}
+			return null;
+		}
+		
+	}
+	
 	public void processIndexScan() {
 		indexCondition = getIndexCondition();
+		if(indexCondition != null){
+			Expression firstIndexCondition = indexCondition;
+			where = getIndexInTree(index, indexType, firstIndexCondition);
+			if(firstIndexCondition instanceof MinorThanEquals && !(((MinorThanEquals)firstIndexCondition).getRightExpression() instanceof Column)){
+				whereKey = iterList[where+1];
+				Expression secondIndexCondition = getGreaterThanWhereCondition();
+				if(secondIndexCondition != null){
+					hasBetween = true;
+					((GreaterThanEquals)secondIndexCondition).getRightExpression().accept(eval);
+					toKey = eval.getValue();
+					betweenMap= tree.subMap(toKey, whereKey);
+					iterList = new String[betweenMap.size()];
+					betweenMap.keySet().toArray(iterList);
+				}
+			}			
+		}
+		/*
 		if(indexType!=-1){
 			try {
 				tree = indexFile.treeMap(this.schema[index].tableName+"_"+this.schema[index].colDef.getColumnName());
@@ -94,7 +140,43 @@ public class IndexScanOperator implements Operator {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+		}*/
+	}
+	
+	private int getIndexInTree(int schemaIndex, int indexType, Expression condition_){
+		int indexInTree = -1;
+		try {
+			tree = indexFile.treeMap(this.schema[schemaIndex].tableName+"_"+this.schema[schemaIndex].colDef.getColumnName());
+			iterList = new String[tree.size()];
+			tree.keySet().toArray(iterList);
+			if(indexType == 0){
+				((EqualsTo)condition_).getRightExpression().accept(eval);
+				indexInTree = new ArrayList(tree.keySet()).indexOf(eval.getValue());
+			}
+			else if(indexType == 1){
+				((MinorThan)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+			}
+			else if(indexType == 2){
+				((MinorThanEquals)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+			}
+			else if(indexType == 3){
+				((GreaterThan)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+				indexInTree++;
+			}
+			else{
+				((GreaterThanEquals)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+			}
+				
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		return indexInTree;
+		
 	}
 	
 	@Override
@@ -103,7 +185,10 @@ public class IndexScanOperator implements Operator {
 		if(indexType!=-1){
 			while(true) {
 			try{
-				if (indexType == 1||indexType == 2)
+				if(hasBetween){
+					tuple = betweenTuple();
+				}
+				else if (indexType == 1||indexType == 2)
 					tuple = lessThanTuple();
 				else if (indexType == 3 || indexType == 4)
 					tuple = greaterThanTuple();
@@ -167,7 +252,7 @@ public class IndexScanOperator implements Operator {
 				if (currExp instanceof EqualsTo) {
 					indexType = 0;
 					index = eval.getColumnID((Column) ((EqualsTo)currExp).getLeftExpression());
-							
+					iterator.remove();		
 					return currExp;
 				}
 			}
@@ -220,6 +305,33 @@ public class IndexScanOperator implements Operator {
 			}
 		}
 		return result;
+	}
+	
+	public Datum[] betweenTuple() throws IOException{
+		while(!exitCondition){
+			if(iter==null){
+				int i=0;
+				ArrayList<String> tupleList =betweenMap.get(iterList[betweenWhere]);
+				betweenWhere++;
+				iter = tupleList.iterator();
+				while(iter.hasNext()) {
+					String obj = iter.next();
+					Datum[] tuples = toDatum(obj);
+					return tuples;
+				}
+			}
+			else {
+				while(iter.hasNext()) {
+					String obj = iter.next();
+					Datum[] tuples = toDatum(obj);
+					return tuples;
+				}
+				iter=null;
+			}
+			if(betweenWhere==iterList.length)
+				exitCondition = true;
+		}
+		return null;
 	}
 	
 	public Datum[] lessThanTuple() throws IOException{
