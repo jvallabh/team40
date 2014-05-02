@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedMap;
 
@@ -50,7 +49,6 @@ public class IndexScanOperator implements Operator {
 	int index;
 	boolean exitCondition;
 	Iterator<String> iter;
-	jdbm.helper.Tuple tuple = new jdbm.helper.Tuple();
 	int where;
 	int to;
 	String whereKey, toKey;

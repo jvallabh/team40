@@ -1,13 +1,9 @@
 package edu.buffalo.cse562;
 
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
@@ -39,14 +35,12 @@ public class BuildIndex {
 	
 	public void buildIndex(int col) throws Exception{
 		this.schema = input.getSchema();
-		long recid,check=1000;
-		String type;
+		int check=1000;
 		SortableTuple.schema=schema;
 		SortableTuple.orderByColumnIndex=new int[]{col};
 		SortableTuple.orderIndex = new int[]{1};
 		Datum[] tuple1 = input.readOneTuple();
 		ArrayList<SortableTuple> sortableTuples = new ArrayList<SortableTuple>();
-		LinkedHashMap<String, ArrayList<String[]>> hashIndex = new LinkedHashMap<String, ArrayList<String[]>>();
 		while(tuple1!=null){
 			SortableTuple sortableTuple = new SortableTuple(tuple1);
 			sortableTuples.add(sortableTuple);

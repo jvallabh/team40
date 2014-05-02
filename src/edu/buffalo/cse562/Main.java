@@ -91,7 +91,7 @@ public class Main {
 					else if(stmt instanceof Select){
 						if(Main.build) {
 							try{
-								BuildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+								BuildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index");
 								FromScanner fromscanner = new FromScanner(Main.dataDir,tables);
 								BuildIndex buildIndex = new BuildIndex(null,0);
 								buildIndex.buildTableIndex();
@@ -112,7 +112,7 @@ public class Main {
 						}
 						else {
 							try {
-								IndexScanOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"Index");
+								IndexScanOperator.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index");
 							}
 							catch(Exception e){
 								e.printStackTrace();
