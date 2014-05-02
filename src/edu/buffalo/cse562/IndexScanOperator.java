@@ -14,9 +14,6 @@ import java.util.SortedMap;
 
 import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
-import jdbm.btree.BTree;
-import jdbm.btree.BTree;
-import jdbm.helper.TupleBrowser;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
@@ -51,7 +48,6 @@ public class IndexScanOperator implements Operator {
 	SortedMap<String,ArrayList<String>> betweenMap;
 	String[] iterList;
 	int index;
-	TupleBrowser browser;
 	boolean exitCondition;
 	Iterator<String> iter;
 	jdbm.helper.Tuple tuple = new jdbm.helper.Tuple();

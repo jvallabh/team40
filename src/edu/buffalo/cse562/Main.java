@@ -10,11 +10,9 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import jdbm.*;
+import jdbm.PrimaryTreeMap;
 
 import jdbm.RecordManagerFactory;
-import jdbm.btree.BTree;
-import jdbm.helper.TupleBrowser;
 
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.parser.CCJSqlParser;
@@ -102,12 +100,7 @@ public class Main {
 									for(int col:(int[])buildIndex.tableIndex.get(s.getName())) {
 									Operator scanOperator = fromscanner.source;
 									buildIndex.input = scanOperator;
-									try {
 										buildIndex.buildIndex(col);
-									}
-									catch(Exception e){
-										e.printStackTrace();
-									}
 									}
 								}
 								BuildIndex.indexFile.close();

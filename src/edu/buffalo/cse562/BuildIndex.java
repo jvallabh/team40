@@ -9,8 +9,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 
-import jdbm.*;
-import jdbm.btree.BTree;
+import jdbm.PrimaryTreeMap;
+import jdbm.RecordManager;
 
 public class BuildIndex {
 	PrimaryTreeMap<String, ArrayList<String>> tree;
