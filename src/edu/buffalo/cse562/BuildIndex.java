@@ -4,6 +4,9 @@ package edu.buffalo.cse562;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
@@ -41,6 +44,7 @@ public class BuildIndex {
 		SortableTuple.orderIndex = new int[]{1};
 		Datum[] tuple1 = input.readOneTuple();
 		ArrayList<SortableTuple> sortableTuples = new ArrayList<SortableTuple>();
+		LinkedHashMap<String, ArrayList<String>> hashIndex = new LinkedHashMap<String, ArrayList<String>>();
 		while(tuple1!=null){
 			SortableTuple sortableTuple = new SortableTuple(tuple1);
 			sortableTuples.add(sortableTuple);
@@ -48,6 +52,27 @@ public class BuildIndex {
 		}
 		Collections.sort(sortableTuples,new SortableTuple(null));
 		tree = indexFile.treeMap(this.schema[col].tableName+"_"+this.schema[col].colDef.getColumnName());
+        for(SortableTuple sTuple: sortableTuples){
+                if(hashIndex.containsKey(sTuple.tuple[col].element))
+                        hashIndex.get(sTuple.tuple[col].element).add(toDatumString(toStringFromDatum(sTuple.tuple)));
+                else {
+                        ArrayList<String> tuples = new ArrayList<String>();
+                        tuples.add(toDatumString(toStringFromDatum(sTuple.tuple)));
+                        hashIndex.put(sTuple.tuple[col].element, tuples);        
+                }
+        }
+        Iterator<Entry<String, ArrayList<String>>> mapIter = hashIndex.entrySet().iterator();
+        while(mapIter.hasNext()){
+                Entry<String, ArrayList<String>> currEntry = mapIter.next();
+                tree.put(currEntry.getKey(), currEntry.getValue());
+                if(check==0){
+                        indexFile.commit();
+                        check=1000;
+                }
+                else
+                        check--;                        
+        }
+		/*tree = indexFile.treeMap(this.schema[col].tableName+"_"+this.schema[col].colDef.getColumnName());
 		for(SortableTuple sTuple: sortableTuples){
 			if(tree.containsKey(sTuple.tuple[col].element))
 				tree.get(sTuple.tuple[col].element).add(toDatumString(toStringFromDatum(sTuple.tuple)));
@@ -62,7 +87,7 @@ public class BuildIndex {
 			}
 			else
 				check--;
-		}
+		}*/
 		input.reset();
 		indexFile.commit();
 		indexFile.clearCache();
