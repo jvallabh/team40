@@ -62,34 +62,13 @@ public class BuildIndex {
 				tuples.add(toDatumString(toStringFromDatum(sTuple.tuple)));
 				tree.put(sTuple.tuple[col].element, tuples);	
 			}
-		}
 			if(check==0){
 				indexFile.commit();
 				check=1000;
 			}
 			else
 				check--;
-		//type = this.schema[col].colDef.getColDataType().toString();
-	/*	recid = indexFile.getNamedObject(this.schema[col].tableName+"_"+this.schema[col].colDef.getColumnName());
-		if(recid != 0) {
-			tree = BTree.load(indexFile, recid);
 		}
-		else {
-			tree = BTree.createInstance(indexFile, new ExampleComparator(type));
-			indexFile.setNamedObject(this.schema[col].tableName+"_"+this.schema[col].colDef.getColumnName(), tree.getRecid());
-		}*/
-	/*	String[] tuple = toStringFromDatum(input.readOneTuple());
-		int i=1000;
-		ArrayList<String[]> tupleList;
-		while(tuple!=null) {
-			tupleList = (ArrayList<String[]>)tmp.get(tuple[col]);
-			if(tupleList==null)
-				tupleList = new ArrayList<>();
-			tupleList.add(tuple);
-			tmp.put(tuple[col], tupleList);
-			tuple = toStringFromDatum(input.readOneTuple());
-		}
-		*/
 		input.reset();
 		indexFile.commit();
 		indexFile.clearCache();
@@ -114,36 +93,5 @@ public class BuildIndex {
 			datumToString.append("|"+d.toString());
 		}
 		return datumToString.substring(1);
-	}
-	
-	public static class ExampleComparator implements Serializable,
-	Comparator<String> {
-String type;
-int x;
-
-	public ExampleComparator(String type) {
-		this.type = type;
-	}
-
-	public int compare(String obj1, String obj2) {
-	
-		if (type.equalsIgnoreCase("int"))
-			x = Integer.compare(Integer.parseInt(obj1),
-					Integer.parseInt(obj2));
-		else if (type.equalsIgnoreCase("DECIMAL"))
-			x = Double.compare(Double.parseDouble(obj1),
-					Double.parseDouble(obj2));
-		else if (type.equalsIgnoreCase("double"))
-			x = Double.compare(Double.parseDouble(obj1),
-					Double.parseDouble(obj2));
-		else if (type.equalsIgnoreCase("string")
-				|| type.equalsIgnoreCase("VARCHAR")
-				|| type.equalsIgnoreCase("CHAR"))
-			x = obj1.toString().compareTo(obj2.toString());
-		else if (type.equalsIgnoreCase("DATE"))
-			x = obj1.compareTo(obj2);
-		return x;
-	}
-	
 	}
 }
