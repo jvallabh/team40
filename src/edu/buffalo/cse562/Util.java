@@ -65,7 +65,9 @@ public class Util {
 	 */
 	public static Operator getJoinedOperatorINLJ(Operator firstTable,List<Join> joinDetails,ArrayList<Expression> conditionsOnSingleTables,ArrayList<Expression> whereCondExpressions) {
 		INLJOperator finalJoinedOperator = null;
+		
 		for (Join currJoin : joinDetails) {
+			
 			FromScanner tempFromScan = new FromScanner(Main.dataDir,Main.tables);
 			currJoin.getRightItem().accept(tempFromScan);
 			Operator tempTableOperator = tempFromScan.source;
@@ -206,8 +208,12 @@ public class Util {
 	
 	public static Operator getJoinedOperatorHashHybrid(Operator firstTable, List<Join> joinDetails, ArrayList<Expression> conditionsOnSingleTables, ArrayList<Expression> whereCondExpressions){
 		JoinOperator finalJoinedOperator = null;
+		
+		
+		
 		for(Join currJoin:joinDetails){
 			FromScanner tempFromScan = new FromScanner(Main.dataDir, Main.tables);
+			//System.out.println(currJoin);
 			currJoin.getRightItem().accept(tempFromScan);
 			Operator tempTableOperator = tempFromScan.source;
 			((IndexScanOperator)tempTableOperator).conditions = Util.getConditionsOfTable(tempTableOperator.getSchema(), conditionsOnSingleTables);
@@ -647,7 +653,7 @@ public class Util {
 	 * @return
 	 */
 	public static boolean isOrderBySameAsGroupBy(List<OrderByElement> orderByElements, List<Column> grpByCols){
-		if(grpByCols != null)
+		if(grpByCols == null)
 			return false;
 		for(int i=0;i<orderByElements.size();i++){
 			String orderByColumn = ((Column)(orderByElements.get(i).getExpression())).getColumnName();
