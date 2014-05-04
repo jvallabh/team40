@@ -45,20 +45,20 @@ public class JoinOperator implements Operator {
 	{
 		ind1 = whereJoinIndexes.get(0)[0];
 		ind2 = whereJoinIndexes.get(0)[1];
-		Datum[] tuple3 = input1.readOneTuple();
+		Datum[] tuple3 = input2.readOneTuple();
 		while(tuple3!=null)
 		{
-			if(map.containsKey(tuple3[ind1].element)) {
+			if(map.containsKey(tuple3[ind2].element)) {
 		        //Add to existing list
-		        map.get(tuple3[ind1].element).add(tuple3);
+		        map.get(tuple3[ind2].element).add(tuple3);
 
 		    } else {
 		        //Create new list
 		        List<Datum[]> tuples = new ArrayList<Datum[]>();
 		        tuples.add(tuple3);
-		        map.put(tuple3[ind1].element, tuples);
+		        map.put(tuple3[ind2].element, tuples);
 		    }
-		  tuple3 = input1.readOneTuple();
+		  tuple3 = input2.readOneTuple();
 		}
 		
 
@@ -92,17 +92,17 @@ public class JoinOperator implements Operator {
 		do {
 			if(iter==null)
 			{
-				tuple1 = input2.readOneTuple();
+				tuple1 = input1.readOneTuple();
 				if(tuple1==null)
 					return null;
-				if(!map.containsKey(tuple1[ind2].element))
+				if(!map.containsKey(tuple1[ind1].element))
 					continue;
 				else
 				{
-					iter =  map.get(tuple1[ind2].element).iterator();
+					iter =  map.get(tuple1[ind1].element).iterator();
 					if(iter.hasNext())
 					{
-						tuple3 = getTuple(iter.next(), tuple1);
+						tuple3 = getTuple(tuple1, iter.next());
 				        return tuple3;
 					}
 					else
@@ -113,7 +113,7 @@ public class JoinOperator implements Operator {
 			{
 				if(iter.hasNext())
 				{
-					tuple3 = getTuple(iter.next(), tuple1);
+					tuple3 = getTuple(tuple1, iter.next() );
 			        return tuple3;
 				}
 				else

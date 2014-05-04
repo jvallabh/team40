@@ -48,7 +48,7 @@ public class Main {
 	 */
 	public static void main(String[] args) {
 		int i;
-		//long millis1 = System.currentTimeMillis() ;
+		long millis1 = System.currentTimeMillis() ;
 		tables = new HashMap<>();
 		for(i=0;i<args.length;i++){
 			if(args[i].equals("--data")){
@@ -137,8 +137,8 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
-		//long millis2 =  (System.currentTimeMillis() );
-		//System.out.println(millis2 - millis1);
+		long millis2 =  (System.currentTimeMillis() );
+		System.out.println(millis2 - millis1);
 		
 	}
 }
