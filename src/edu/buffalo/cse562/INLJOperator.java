@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 
 import net.sf.jsqlparser.expression.Expression;
+import jdbm.PrimaryTreeMap;
 import jdbm.RecordManager;
 import jdbm.RecordManagerFactory;
 import jdbm.btree.BTree;
@@ -15,7 +16,7 @@ public class INLJOperator implements Operator {
 	Operator input1;
 	Operator input2;
 	static RecordManager indexFile;
-	BTree tree;
+	PrimaryTreeMap<Datum, ArrayList<Datum[]>> tree;
 	ColumnInfo[] schema;
 	ArrayList<Expression> whereJoinCondition;
 	ArrayList<Integer[]> whereJoinIndexes;
@@ -34,7 +35,7 @@ public class INLJOperator implements Operator {
 		ind1 = this.whereJoinIndexes.get(0)[0];
 		ind2 = this.whereJoinIndexes.get(0)[1];
 		try{
-		tree = BTree.load(indexFile,indexFile.getNamedObject(input2.getSchema()[ind2].origTableName+"_"+input2.getSchema()[ind2].colDef.getColumnName()));
+		tree = indexFile.treeMap(this.schema[ind2].tableName+"_"+this.schema[ind2].colDef.getColumnName(),new Datum(null),new DatumSerializer(input2.getSchema().length));
 		}
 		catch(Exception e) {
 			e.printStackTrace();	

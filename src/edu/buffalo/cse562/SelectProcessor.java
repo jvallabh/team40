@@ -49,8 +49,14 @@ public class SelectProcessor {
 		pselect.getFromItem().accept(fromscan);
 		Operator firstTableOperator = fromscan.source;
 		
+		
 		//Incase of subSelect, we will get final resultant operator like project operator.
-		if(firstTableOperator instanceof IndexScanOperator){
+		if(firstTableOperator instanceof IndexScanOperator&&!Main.done){
+			if(Main.tpch){
+				firstTableOperator = (Operator) Util.getNewJoin(firstTableOperator, null, conditionsOnSingleTables, whereCondExpressions);
+				Main.done = true;
+				return (Operator)firstTableOperator;	
+			}
 			((IndexScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
 			((IndexScanOperator)firstTableOperator).processIndexScan();
 		}		
@@ -99,7 +105,11 @@ public class SelectProcessor {
 		SelectionOperator selectOperator = null;
 		ProjectionOperator projectOperator = null;
 		
-		if(hasJoin){	
+		if(hasJoin){
+			if(Main.tpch){
+				finalJoinedOperator = (Operator) Util.getNewJoin(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
+				return (Operator)finalJoinedOperator;	
+			}
 			//finalJoinedOperator = (INLJOperator) Util.getJoinedOperatorINLJ(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.getSchema(), whereCondExpressions);

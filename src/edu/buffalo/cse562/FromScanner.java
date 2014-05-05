@@ -58,7 +58,7 @@ public class FromScanner implements FromItemVisitor {
 		CreateTable table = tables.get(tableName.getName().toUpperCase()) == null?tables.get(tableName.getName()):tables.get(tableName.getName().toUpperCase());
 		List<?> colDefs = table.getColumnDefinitions();
 		ColumnDefinition[] colDefschema = new ColumnDefinition[colDefs.size()];
-		schema = new ColumnInfo[colDefs.size()];
+		schema = new ColumnInfo[4];
 		colDefs.toArray(colDefschema);
 		for(int i=0;i<colDefschema.length;i++){
 			String origTableName = tableName.getName();

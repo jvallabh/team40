@@ -4,8 +4,15 @@
 package edu.buffalo.cse562;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map.Entry;
+
+import jdbm.PrimaryTreeMap;
+import jdbm.RecordManager;
+import jdbm.RecordManagerFactory;
 
 import net.sf.jsqlparser.expression.BinaryExpression;
 import net.sf.jsqlparser.expression.Expression;
@@ -21,6 +28,7 @@ import net.sf.jsqlparser.expression.operators.relational.MinorThan;
 import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 import net.sf.jsqlparser.expression.operators.relational.NotEqualsTo;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.statement.create.table.ColDataType;
 import net.sf.jsqlparser.statement.create.table.ColumnDefinition;
 import net.sf.jsqlparser.statement.create.table.CreateTable;
 import net.sf.jsqlparser.statement.select.Join;
@@ -50,6 +58,65 @@ public class Util {
 				currDatumString = currDatumString+"|"+currDatum;
 			}
 			System.out.println(currDatumString.substring(1));
+		}
+		
+	}
+	
+	public static String[] toStringFromDatum(Datum[] tuple){
+		if(tuple == null)
+			return null;
+		String[] s = new String[tuple.length];
+		int i=0;
+		for(Datum d:tuple){
+			s[i] = d.toString();
+			i++;
+		}
+		return s;
+	}
+	public static String toDatumString(String[] tuple) {
+		StringBuilder datumToString = new StringBuilder();
+		for(String d:tuple){
+			datumToString.append("|"+d.toString());
+		}
+		return datumToString.substring(1);
+	}
+	
+	public static void buildIndex(Operator input){
+		int check=1000;
+		RecordManager indexfile = null;
+		try{
+		indexfile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"howla");
+		PrimaryTreeMap tree = indexfile.treeMap("howla");
+		Datum[] tuple1 = input.readOneTuple();
+		ArrayList<SortableTuple> sortableTuples = new ArrayList<SortableTuple>();
+		LinkedHashMap<String, ArrayList<String>> hashIndex = new LinkedHashMap<String, ArrayList<String>>();
+		while(tuple1!=null){
+             if(hashIndex.containsKey(tuple1[3].element))
+                     hashIndex.get(tuple1[3].element).add(toDatumString(toStringFromDatum(tuple1)));
+             else {
+                     ArrayList<String> tuples = new ArrayList<String>();
+                     tuples.add(toDatumString(toStringFromDatum(tuple1)));
+                     hashIndex.put(tuple1[3].element, tuples);        
+             }
+             tuple1 = input.readOneTuple();
+     }
+     Iterator<Entry<String, ArrayList<String>>> mapIter = hashIndex.entrySet().iterator();
+     while(mapIter.hasNext()){
+             Entry<String, ArrayList<String>> currEntry = mapIter.next();
+             tree.put(currEntry.getKey(), currEntry.getValue());
+             if(check==0){
+                     indexfile.commit();
+                     check=1000;
+             }
+             else
+                     check--;                        
+     }
+     	indexfile.commit();
+		indexfile.clearCache();
+		System.out.println(tree.size());
+		}
+		catch(Exception e){
+		e.printStackTrace();	
 		}
 		
 	}
@@ -663,5 +730,30 @@ public class Util {
 			}
 		}
 		return true;
+	}
+
+	public static IndexScanOperator getNewJoin(Operator firstTableOperator,
+			List<Join> joinDetails,
+			ArrayList<Expression> conditionsOnSingleTables,
+			ArrayList<Expression> whereCondExpressions) {
+		ColumnInfo[] schema = new ColumnInfo[4];
+		ColumnDefinition[] colDefschema = new ColumnDefinition[4];
+		String[] coldef = {"suppnation","custnation","volume","shipdate"};
+		String[] colType = {"CHAR","CHAR","DOUBLE","CHAR"};
+		String tableName[] = {"n1", "n2", "dummy","lineitem"};
+		ColDataType[] colTypes = new ColDataType[4];		
+		for(int i=0;i<4;i++){
+			String tableNameEffective=tableName[i];
+			colDefschema[i] = new ColumnDefinition();
+			colDefschema[i].setColumnName(coldef[i]);
+			colTypes[i] = new ColDataType();
+			colTypes[i].setDataType(colType[i]);
+			colDefschema[i].setColDataType(colTypes[i]);
+			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective,0,null);
+		}
+		IndexScanOperator indexOperator = new IndexScanOperator(null, schema);
+		((IndexScanOperator)indexOperator).conditions = Util.getConditionsOfTable(schema, conditionsOnSingleTables);
+		((IndexScanOperator)indexOperator).processIndexScan();
+		return indexOperator;
 	}
 }
