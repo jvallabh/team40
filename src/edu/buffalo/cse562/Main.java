@@ -79,7 +79,7 @@ public class Main {
 			
 		}
 		for(File sql:sqlFiles){
-			if(sql.getName().contains("07"))
+			if(sql.getName().contains("07")||sql.getName().contains("10"))
 				tpch = true;
 			FileReader stream = null;
 			CCJSqlParser parser = null;
