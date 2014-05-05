@@ -102,8 +102,7 @@ public class IndexScanOperator implements Operator {
 				tableName = this.schema[index].tableName;
 			where = getIndexInTree(index, indexType, firstIndexCondition);
 			if(firstIndexCondition instanceof MinorThanEquals && !(((MinorThanEquals)firstIndexCondition).getRightExpression() instanceof Column)){
-				((MinorThanEquals)firstIndexCondition).getRightExpression().accept(eval);
-				whereKey = eval.getValue();
+				whereKey = iterList[where+1];
 				int columnId = eval.getColumnID(((Column)((MinorThanEquals)indexCondition).getLeftExpression()));
 				Expression secondIndexCondition = getGreaterThanWhereCondition(columnId);
 				if(secondIndexCondition != null){
@@ -116,7 +115,6 @@ public class IndexScanOperator implements Operator {
 				}
 			}
 			else if(firstIndexCondition instanceof MinorThan && !(((MinorThan)firstIndexCondition).getRightExpression() instanceof Column)){
-				where = getIndexInTree2(index, indexType, firstIndexCondition);
 					whereKey = iterList[where];
 					int columnId = eval.getColumnID(((Column)((MinorThan)indexCondition).getLeftExpression()));
 					Expression secondIndexCondition = getGreaterThanWhereCondition(columnId);
@@ -174,43 +172,6 @@ public class IndexScanOperator implements Operator {
 			tree.keySet().toArray(iterList);
 			if(indexType == 0){
 				((EqualsTo)condition_).getRightExpression().accept(eval);
-				indexInTree = new ArrayList(tree.keySet()).indexOf(eval.getValue());
-			}
-			else if(indexType == 1){
-				((MinorThan)condition_).getRightExpression().accept(eval);
-				indexInTree = searchKey(eval.getValue());
-			}
-			else if(indexType == 2){
-				((MinorThanEquals)condition_).getRightExpression().accept(eval);
-				indexInTree = searchKey(eval.getValue());
-			}
-			else if(indexType == 3){
-				((GreaterThan)condition_).getRightExpression().accept(eval);
-				indexInTree = searchKey(eval.getValue());
-				indexInTree++;
-			}
-			else{
-				((GreaterThanEquals)condition_).getRightExpression().accept(eval);
-				indexInTree = searchKey(eval.getValue());
-			}
-				
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return indexInTree;
-		
-	}
-	
-	private int getIndexInTree2(int schemaIndex, int indexType, Expression condition_){
-		int indexInTree = -1;
-		String tableName;
-		try {;
-			tree = indexFile.treeMap(this.schema[schemaIndex].tableName+"_"+this.schema[schemaIndex].colDef.getColumnName());
-			iterList = new String[tree.size()];
-			tree.keySet().toArray(iterList);
-			if(indexType == 0){
-				((EqualsTo)condition_).getRightExpression().accept(eval);
 				indexInTree = Arrays.asList(iterList).indexOf(eval.getValue());
 			}
 			else if(indexType == 1){
@@ -238,6 +199,7 @@ public class IndexScanOperator implements Operator {
 		return indexInTree;
 		
 	}
+	
 	
 	@Override
 	public Datum[] readOneTuple() {
