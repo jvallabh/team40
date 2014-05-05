@@ -239,7 +239,7 @@ public class Util {
 				else{
 					Object[] whereJoinConditionDetails = new Object[]{};
 					ColumnInfo[] currFinalSchema = finalJoinedOperator.getSchema();
-					if (true)
+					if (true&&Main.tpch)
 					{
 					finalJoinedOperator = new JoinOperator(tempTableOperator,finalJoinedOperator, null);
 					 whereJoinConditionDetails = getConditionsOfJoin(tempTableOperator.getSchema(), currFinalSchema,  whereCondExpressions);
