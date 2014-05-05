@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import jdbm.PrimaryTreeMap;
 import net.sf.jsqlparser.expression.Expression;
 
 /**
@@ -33,7 +35,7 @@ public class JoinOperator implements Operator {
 	int ind1=0;
 	int ind2=0;
 	Map<String, List<Datum[]>> map = new HashMap<String, List<Datum[]>>();
-	Map<String, ArrayList<String>> scanmap = new HashMap<String, ArrayList<String>>();
+	PrimaryTreeMap<String, ArrayList<String>> scanmap;
 	boolean doIndexScan=false;
 	
 	public JoinOperator(Operator input1, Operator input2, Expression condition){
@@ -52,14 +54,18 @@ public class JoinOperator implements Operator {
 		while(tuple3!=null)
 		{
 			if(input1.getSchema()[0].tableName.equals(input1.getSchema()[input1.getSchema().length-1].tableName)&&!input1.getSchema()[3].tableName.equals("lineitem")&&Main.tpch){
+				if(input1.getSchema().length==4&&input1.getSchema()[0].origTableName.equals("nation"))
+					scanmap = Main.indexFile.treeMap(input1.getSchema()[ind1].origTableName+"_"+input1.getSchema()[ind1].colDef.getColumnName());
+				else {
 			try{
 			scanmap = ((IndexScanOperator)input1).indexFile.treeMap(input1.getSchema()[ind1].tableName+"_"+input1.getSchema()[ind1].colDef.getColumnName());
-			doIndexScan = true;
 			}
 			catch(Exception e){
 				e.printStackTrace();
 			}
-			return;
+			}
+				doIndexScan = true;
+				return;
 			}
 			else{
 			if(map.containsKey(tuple3[ind1].element)) {
@@ -115,7 +121,12 @@ public class JoinOperator implements Operator {
 						continue;
 					else
 					{
-						iter1 = scanmap.get(tuple1[ind2].element).iterator();
+						try{
+						iter1 = scanmap.find(tuple1[ind2].element).iterator();
+						}
+						catch(Exception e){
+							e.printStackTrace();
+						}
 						if(iter1.hasNext())
 						{
 							tuple3 = getTuple(toDatum(iter1.next()), tuple1);

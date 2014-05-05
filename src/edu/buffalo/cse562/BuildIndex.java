@@ -27,8 +27,8 @@ public class BuildIndex {
 	
 	public void buildTableIndex(){
 		tableIndex.put("lineitem", new int[] { 8, 12, 10 });
-		tableIndex.put("orders", new int[] { 4 });
-		tableIndex.put("customer", new int[] { 3,6 });
+		tableIndex.put("orders", new int[] { 0,4 });
+		tableIndex.put("customer", new int[] {0, 3,6 });
 		tableIndex.put("region", new int[] { 1 });
 	    tableIndex.put("supplier", new int[] { 0,3 });
 	    tableIndex.put("nation", new int[] { 0, 2 });

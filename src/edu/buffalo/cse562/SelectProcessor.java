@@ -61,15 +61,7 @@ public class SelectProcessor {
 		 */
 		List<Join> joinDetails = pselect.getJoins();
 		boolean hasJoin = joinDetails == null?false:true;
-		if (Main.tpch && hasJoin) {
-		Join li = joinDetails.get(0);
-		Join or = joinDetails.get(1);
-		Join cu = joinDetails.get(2);
-		Join n1 = joinDetails.get(3);
-		Join n2 = joinDetails.get(4);
-		joinDetails.remove(3);
-		joinDetails.add(0, n1);		
-		}
+
 		Operator finalJoinedOperator = null;
 		
 		List<Column> groupByColumns = pselect.getGroupByColumnReferences();
