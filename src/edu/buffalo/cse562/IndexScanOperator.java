@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.SortedMap;
 
@@ -61,6 +62,15 @@ public class IndexScanOperator implements Operator {
 		this.schema = schema;
 		reset(); 
 		this.eval = new Evaluator(schema);
+		try{
+			if(schema[0].origTableName.equals("nation"))
+				indexFile = Main.indexFile;
+			else
+			indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+schema[0].tableName);
+		}
+		catch(Exception e){
+			e.printStackTrace();
+		}
 	}
 	
 	private Expression getGreaterThanWhereCondition(int columnIndexFound){
@@ -86,10 +96,14 @@ public class IndexScanOperator implements Operator {
 	public void processIndexScan() {
 		indexCondition = getIndexCondition();
 		if(indexCondition != null){
-			Expression firstIndexCondition = indexCondition;
+			Expression firstIndexCondition = indexCondition;			
+			String tableName = this.schema[index].origTableName;
+			if(tableName==null)
+				tableName = this.schema[index].tableName;
 			where = getIndexInTree(index, indexType, firstIndexCondition);
 			if(firstIndexCondition instanceof MinorThanEquals && !(((MinorThanEquals)firstIndexCondition).getRightExpression() instanceof Column)){
-				whereKey = iterList[where+1];
+				((MinorThanEquals)firstIndexCondition).getRightExpression().accept(eval);
+				whereKey = eval.getValue();
 				int columnId = eval.getColumnID(((Column)((MinorThanEquals)indexCondition).getLeftExpression()));
 				Expression secondIndexCondition = getGreaterThanWhereCondition(columnId);
 				if(secondIndexCondition != null){
@@ -102,6 +116,7 @@ public class IndexScanOperator implements Operator {
 				}
 			}
 			else if(firstIndexCondition instanceof MinorThan && !(((MinorThan)firstIndexCondition).getRightExpression() instanceof Column)){
+				where = getIndexInTree2(index, indexType, firstIndexCondition);
 					whereKey = iterList[where];
 					int columnId = eval.getColumnID(((Column)((MinorThan)indexCondition).getLeftExpression()));
 					Expression secondIndexCondition = getGreaterThanWhereCondition(columnId);
@@ -153,22 +168,50 @@ public class IndexScanOperator implements Operator {
 	private int getIndexInTree(int schemaIndex, int indexType, Expression condition_){
 		int indexInTree = -1;
 		String tableName;
-		try {
-			tableName = this.schema[schemaIndex].origTableName;
-			if(tableName==null)
-				tableName = this.schema[schemaIndex].tableName;
-			try{
-				indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+tableName);
-			}
-			catch(Exception e){
-				e.printStackTrace();
-			}
+		try {;
 			tree = indexFile.treeMap(this.schema[schemaIndex].tableName+"_"+this.schema[schemaIndex].colDef.getColumnName());
 			iterList = new String[tree.size()];
 			tree.keySet().toArray(iterList);
 			if(indexType == 0){
 				((EqualsTo)condition_).getRightExpression().accept(eval);
 				indexInTree = new ArrayList(tree.keySet()).indexOf(eval.getValue());
+			}
+			else if(indexType == 1){
+				((MinorThan)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+			}
+			else if(indexType == 2){
+				((MinorThanEquals)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+			}
+			else if(indexType == 3){
+				((GreaterThan)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+				indexInTree++;
+			}
+			else{
+				((GreaterThanEquals)condition_).getRightExpression().accept(eval);
+				indexInTree = searchKey(eval.getValue());
+			}
+				
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return indexInTree;
+		
+	}
+	
+	private int getIndexInTree2(int schemaIndex, int indexType, Expression condition_){
+		int indexInTree = -1;
+		String tableName;
+		try {;
+			tree = indexFile.treeMap(this.schema[schemaIndex].tableName+"_"+this.schema[schemaIndex].colDef.getColumnName());
+			iterList = new String[tree.size()];
+			tree.keySet().toArray(iterList);
+			if(indexType == 0){
+				((EqualsTo)condition_).getRightExpression().accept(eval);
+				indexInTree = Arrays.asList(iterList).indexOf(eval.getValue());
 			}
 			else if(indexType == 1){
 				((MinorThan)condition_).getRightExpression().accept(eval);

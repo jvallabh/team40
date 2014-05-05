@@ -25,6 +25,7 @@ public class JoinOperator implements Operator {
 	Expression condition;
 	Datum[] tuple1 =null;
 	Iterator<Datum[]> iter=null;
+	Iterator<String> iter1=null;
 	boolean active = false;
 	boolean isHashed = false;
 	ArrayList<Expression> whereJoinCondition;
@@ -32,6 +33,8 @@ public class JoinOperator implements Operator {
 	int ind1=0;
 	int ind2=0;
 	Map<String, List<Datum[]>> map = new HashMap<String, List<Datum[]>>();
+	Map<String, ArrayList<String>> scanmap = new HashMap<String, ArrayList<String>>();
+	boolean doIndexScan=false;
 	
 	public JoinOperator(Operator input1, Operator input2, Expression condition){
 		this.input1 = input1;
@@ -48,6 +51,17 @@ public class JoinOperator implements Operator {
 		Datum[] tuple3 = input1.readOneTuple();
 		while(tuple3!=null)
 		{
+			if(input1.getSchema()[0].tableName.equals(input1.getSchema()[input1.getSchema().length-1].tableName)&&!input1.getSchema()[3].tableName.equals("lineitem")&&Main.tpch){
+			try{
+			scanmap = ((IndexScanOperator)input1).indexFile.treeMap(input1.getSchema()[ind1].tableName+"_"+input1.getSchema()[ind1].colDef.getColumnName());
+			doIndexScan = true;
+			}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			return;
+			}
+			else{
 			if(map.containsKey(tuple3[ind1].element)) {
 		        //Add to existing list
 		        map.get(tuple3[ind1].element).add(tuple3);
@@ -59,6 +73,7 @@ public class JoinOperator implements Operator {
 		        map.put(tuple3[ind1].element, tuples);
 		    }
 		  tuple3 = input1.readOneTuple();
+			}
 		}
 		
 
@@ -88,6 +103,43 @@ public class JoinOperator implements Operator {
 			buildHash();
 			isHashed = true;
 		}*/
+		if(doIndexScan){
+			Datum[] tuple3 = null;
+			do {
+				if(iter1==null)
+				{
+					tuple1 = input2.readOneTuple();
+					if(tuple1==null)
+						return null;
+					if(!scanmap.containsKey(tuple1[ind2].element))
+						continue;
+					else
+					{
+						iter1 = scanmap.get(tuple1[ind2].element).iterator();
+						if(iter1.hasNext())
+						{
+							tuple3 = getTuple(toDatum(iter1.next()), tuple1);
+					        return tuple3;
+						}
+						else
+							iter1=null;
+					}
+				}
+				else
+				{
+					if(iter1.hasNext())
+					{
+						tuple3 = getTuple(toDatum(iter1.next()), tuple1);
+				        return tuple3;
+					}
+					else
+						iter1=null;
+					
+				}
+			}while(tuple3==null);
+			return null;	
+			}
+	else{
 		Datum[] tuple3 = null;
 		do {
 			if(iter==null)
@@ -122,6 +174,7 @@ public class JoinOperator implements Operator {
 			}
 		}while(tuple3==null);
 		return null;		
+	}
 	}
 	
 		
@@ -166,5 +219,15 @@ public class JoinOperator implements Operator {
 	public ColumnInfo[] getSchema() {
 		// TODO Auto-generated method stub
 		return schema;
+	}
+	
+	public Datum[] toDatum(String line){
+		String[] cols = line.split("\\|");
+		Datum[] ret = new Datum[cols.length];
+		for (int i=0; i<cols.length; i++) {
+			//ret[i] = new Datum.Long(cols[i]);
+			ret[i] = new Datum(cols[i]);
+		}
+		return ret;
 	}
 }

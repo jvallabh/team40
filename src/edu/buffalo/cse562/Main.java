@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 import jdbm.PrimaryTreeMap;
+import jdbm.RecordManager;
 
 import jdbm.RecordManagerFactory;
 
@@ -43,6 +44,7 @@ public class Main {
 	public static ArrayList<Table> tableNames = new ArrayList<>();
 	public static String indexDir;
 	public static boolean tpch;
+	public static RecordManager indexFile;
 	/**
 	 * @param args
 	 */
@@ -70,6 +72,12 @@ public class Main {
 				sqlFiles.add(new File(args[i]));
 			}
 		}
+		try{
+			Main.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+"nation");
+		}
+		catch(Exception e){
+			
+		}
 		for(File sql:sqlFiles){
 			if(sql.getName().contains("07"))
 				tpch = true;
@@ -96,11 +104,11 @@ public class Main {
 								for(Table s: tableNames){
 									BuildIndex buildIndex = new BuildIndex(null,0);
 									buildIndex.buildTableIndex();
-									buildIndex.indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+s);
 									fromscanner.visit(s);
 									for(int col:(int[])buildIndex.tableIndex.get(s.getName())) {
 									Operator scanOperator = fromscanner.source;
 									buildIndex.input = scanOperator;
+									buildIndex.indexFile = ((IndexScanOperator)scanOperator).indexFile;
 										buildIndex.buildIndex(col);
 									}
 									buildIndex.indexFile.close();
@@ -136,6 +144,7 @@ public class Main {
 			catch(IOException e){
 				e.printStackTrace();
 			}
+			tpch=false;
 		}
 		//long millis2 =  (System.currentTimeMillis() );
 		//System.out.println(millis2 - millis1);
