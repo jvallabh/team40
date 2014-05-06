@@ -172,7 +172,7 @@ public class Main {
 			
 			Limit limit = pselect.getLimit();
 			boolean hasLimit = limit == null?false:true;
-				Util.buildIndex(resultOperator);										
+				Util.buildFile(resultOperator);										
 		}
 		}
 		catch(Exception e) {

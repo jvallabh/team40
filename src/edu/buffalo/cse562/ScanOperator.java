@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import net.sf.jsqlparser.expression.Expression;
+import net.sf.jsqlparser.expression.operators.relational.GreaterThanEquals;
+import net.sf.jsqlparser.expression.operators.relational.MinorThanEquals;
 
 /**
  * @author The Usual Suspects
@@ -29,6 +31,8 @@ public class ScanOperator implements Operator {
 	Evaluator eval;
 	Iterator<Expression> iterator;
 	Expression currCondition;
+	Datum date1;
+	Datum date2;
 	
 	public ScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
@@ -82,9 +86,25 @@ public class ScanOperator implements Operator {
 		return schema;
 	}
 	
+	public void setVar(){
+		iterator = conditions.iterator();
+		while(iterator.hasNext()){
+			currCondition = iterator.next();				
+			((MinorThanEquals)currCondition).getRightExpression().accept(eval);
+			date1 = new Datum(eval.getValue());
+			currCondition = iterator.next();
+			((GreaterThanEquals)currCondition).getRightExpression().accept(eval);	
+			date2 = new Datum(eval.getValue());
+		}
+	}
+	
 	private boolean evaluateTuple(Datum[] tuple){
 		boolean result = true;
-		if(conditions.size() != 0){
+		if(Main.tpch&&!Main.build){
+		if(!(tuple[3].compareTo(date1)<=0&&tuple[3].compareTo(date2)>=0))
+			result = false;
+		}
+		else if(conditions.size() != 0){
 			iterator = conditions.iterator();
 			while(iterator.hasNext()){
 				currCondition = iterator.next();				

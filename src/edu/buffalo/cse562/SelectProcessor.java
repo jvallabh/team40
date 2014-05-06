@@ -50,7 +50,7 @@ public class SelectProcessor {
 		Operator firstTableOperator = fromscan.source;
 		
 		if(Main.tpch&&!Main.done){
-			firstTableOperator = (Operator) Util.getNewJoin(null, null, conditionsOnSingleTables, whereCondExpressions);
+			firstTableOperator = (Operator) Util.getOldJoin(null, null, conditionsOnSingleTables, whereCondExpressions);
 			Main.done = true;
 			return (Operator)firstTableOperator;	
 		}
@@ -106,8 +106,9 @@ public class SelectProcessor {
 		}
 		
 		if(Main.tpch&&!Main.build){
+		selectOperator = new SelectionOperator(firstTableOperator, firstTableOperator.getSchema(), whereCondExpressions);
 		
-		projectOperator = new ProjectionOperator(firstTableOperator,firstTableOperator.getSchema(),selectItems);
+		projectOperator = new ProjectionOperator(selectOperator,selectOperator.getSchema(),selectItems);
 		
 		finalGrpByOperator = Util.getGroupByOperator(projectOperator, groupByColumns);
 		

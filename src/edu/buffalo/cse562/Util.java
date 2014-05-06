@@ -3,6 +3,13 @@
  */
 package edu.buffalo.cse562;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -119,6 +126,24 @@ public class Util {
 		e.printStackTrace();	
 		}
 		
+	}
+	
+	public static void buildFile(Operator input){
+		Datum[] tuple = input.readOneTuple();
+		try{
+	        File file = new File(Main.indexDir+"/"+"daffa");
+	        OutputStream out = new FileOutputStream(file);
+	        BufferedWriter fbw = new BufferedWriter(new OutputStreamWriter(out, Charset.defaultCharset()),15*1024*1024);
+	        while(tuple!=null){
+			fbw.write(toDatumString(toStringFromDatum(tuple)));
+			fbw.newLine();
+			tuple = input.readOneTuple();
+	        }
+	        fbw.close();
+		}
+			catch(Exception e){
+				e.printStackTrace();
+			}
 	}
 	
 	/**
@@ -754,6 +779,31 @@ public class Util {
 		IndexScanOperator indexOperator = new IndexScanOperator(null, schema);
 		((IndexScanOperator)indexOperator).conditions = Util.getConditionsOfTable(schema, conditionsOnSingleTables);
 		((IndexScanOperator)indexOperator).processIndexScan();
+		return indexOperator;
+	}
+	
+	public static ScanOperator getOldJoin(Operator firstTableOperator,
+			List<Join> joinDetails,
+			ArrayList<Expression> conditionsOnSingleTables,
+			ArrayList<Expression> whereCondExpressions) {
+		ColumnInfo[] schema = new ColumnInfo[4];
+		ColumnDefinition[] colDefschema = new ColumnDefinition[4];
+		String[] coldef = {"suppnation","custnation","volume","shipdate"};
+		String[] colType = {"CHAR","CHAR","DOUBLE","CHAR"};
+		String tableName[] = {"n1", "n2", "dummy","lineitem"};
+		ColDataType[] colTypes = new ColDataType[4];		
+		for(int i=0;i<4;i++){
+			String tableNameEffective=tableName[i];
+			colDefschema[i] = new ColumnDefinition();
+			colDefschema[i].setColumnName(coldef[i]);
+			colTypes[i] = new ColDataType();
+			colTypes[i].setDataType(colType[i]);
+			colDefschema[i].setColDataType(colTypes[i]);
+			schema[i]=new ColumnInfo(colDefschema[i],tableNameEffective,0,null);
+		}
+		ScanOperator indexOperator = new ScanOperator(new File(Main.indexDir+"/"+"daffa"), schema);
+		indexOperator.conditions = conditionsOnSingleTables;
+		indexOperator.setVar();
 		return indexOperator;
 	}
 }
