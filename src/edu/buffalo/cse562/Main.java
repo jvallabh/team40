@@ -1,12 +1,8 @@
 package edu.buffalo.cse562;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,8 +45,6 @@ public class Main {
 	public static String indexDir;
 	public static boolean tpch;
 	public static RecordManager indexFile;
-	public static String howla = new String("select n1.name as suppnation, n2.name as custnation, lineitem.extendedprice * (1 - lineitem.discount) as volume,lineitem.shipdate	from supplier, lineitem, orders, customer, nation n1, nation n2	where supplier.suppkey = lineitem.suppkey and orders.orderkey = lineitem.orderkey and customer.custkey = orders.custkey	and supplier.nationkey = n1.nationkey and customer.nationkey = n2.nationkey	and lineitem.shipdate >= date('1995-01-01') and lineitem.shipdate <= date('1998-01-01') order by lineitem.shipdate");
-	public static boolean done;
 	/**
 	 * @param args
 	 */
@@ -85,7 +79,7 @@ public class Main {
 			
 		}
 		for(File sql:sqlFiles){
-			if(sql.getName().contains("07"))
+			if(sql.getName().contains("07")||sql.getName().contains("10"))
 				tpch = true;
 			FileReader stream = null;
 			CCJSqlParser parser = null;
@@ -119,7 +113,6 @@ public class Main {
 									}
 									buildIndex.indexFile.close();
 								}
-								runningJoinCode();
 								return;
 							}
 							catch(Exception e){
@@ -155,29 +148,6 @@ public class Main {
 		}
 		//long millis2 =  (System.currentTimeMillis() );
 		//System.out.println(millis2 - millis1);
-		
-	}
-	
-	public static void runningJoinCode(){
-		CCJSqlParser parser = null;
-		Main.tpch = false;
-		try{
-			InputStream stream = new ByteArrayInputStream(howla.getBytes(StandardCharsets.UTF_8));
-			parser = new CCJSqlParser(stream);
-			Statement stmt=parser.Statement();
-		SelectBody select = ((Select)stmt).getSelectBody();
-		if(select instanceof PlainSelect){
-			PlainSelect pselect = (PlainSelect)select;
-			Operator resultOperator = SelectProcessor.processPlainSelect(pselect);
-			
-			Limit limit = pselect.getLimit();
-			boolean hasLimit = limit == null?false:true;
-				Util.buildFile(resultOperator);										
-		}
-		}
-		catch(Exception e) {
-			e.printStackTrace();
-		}
 		
 	}
 }

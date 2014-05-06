@@ -187,7 +187,7 @@ public class ProjectionOperator implements Operator {
 		Datum[] newTuple = null;
 		if(tuple == null)
 			return null;
-		if (selectItems.get(0) instanceof AllColumns&&Main.tpch&&!Main.build)
+		if (selectItems.get(0) instanceof AllColumns)
 			return tuple;
 		else {			
 			SelectExpressionItem selectExp;

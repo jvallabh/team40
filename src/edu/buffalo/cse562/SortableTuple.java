@@ -22,11 +22,6 @@ public class SortableTuple implements Serializable,Comparator<SortableTuple> {
 		int  x=0;int j=0;
 		for(int i:orderByColumnIndex){
 			//System.out.println("Column datatype is: "+schema[i].colDef.getColDataType());
-			if(Main.tpch&&!Main.build){
-				if(x!=0) break;
-				x= orderIndex[j]*arg0.tuple[i].element.compareTo(arg1.tuple[i].element);
-			}
-			else {
 			String colDataType = schema[i].colDef.getColDataType().getDataType();
 			if(x!=0) break;
 			if(colDataType.equalsIgnoreCase("double")){
@@ -44,8 +39,7 @@ public class SortableTuple implements Serializable,Comparator<SortableTuple> {
 			}				 
 			else if(colDataType.equalsIgnoreCase("date")){
 				x  =orderIndex[j]*arg0.tuple[i].Date().compareTo(arg1.tuple[i].Date());
-			}
-			}
+			}				 
 			j++;
 		}
 		return x;

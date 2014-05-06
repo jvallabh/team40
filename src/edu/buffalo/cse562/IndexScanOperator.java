@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.SortedMap;
 
 import jdbm.PrimaryTreeMap;
@@ -58,7 +57,6 @@ public class IndexScanOperator implements Operator {
 	String whereKey, toKey;
 	boolean hasBetween;
 	int betweenWhere = 0;
-	static RecordManager indexFile1=null;
 	
 	public IndexScanOperator(File f, ColumnInfo[] schema) {
 		this.f = f;
@@ -66,13 +64,7 @@ public class IndexScanOperator implements Operator {
 		reset(); 
 		this.eval = new Evaluator(schema);
 		try{
-			if(Main.tpch&&!Main.build)
-			{
-				if(indexFile1==null)
-					indexFile1 = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"howla");
-				indexFile = indexFile1;
-			}
-			else if(schema[0].origTableName.equals("nation"))
+			if(schema[0].origTableName.equals("nation"))
 				indexFile = Main.indexFile;
 			else
 			indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+schema[0].tableName);
@@ -175,13 +167,10 @@ public class IndexScanOperator implements Operator {
 	private int getIndexInTree(int schemaIndex, int indexType, Expression condition_){
 		int indexInTree = -1;
 		String tableName;
-		try {
-			if(Main.tpch&&!Main.build)
-				tree = indexFile.treeMap("howla");
-			else
+		try {;
 			tree = indexFile.treeMap(this.schema[schemaIndex].tableName+"_"+this.schema[schemaIndex].colDef.getColumnName());
-			Set<String> set = tree.keySet();
-			iterList = set.toArray(new String[set.size()]);
+			iterList = new String[tree.size()];
+			tree.keySet().toArray(iterList);
 			if(indexType == 0){
 				((EqualsTo)condition_).getRightExpression().accept(eval);
 				indexInTree = Arrays.asList(iterList).indexOf(eval.getValue());
@@ -235,13 +224,6 @@ public class IndexScanOperator implements Operator {
 			if(evaluateTuple(tuple))
 				break;
 			}
-			if(Main.tpch&&!Main.build){
-				Datum[] modifiedTuple = new Datum[3];
-				for(int i=0;i<3;i++){
-					modifiedTuple[i] = tuple[i];
-				}
-				return modifiedTuple;
-			}
 			return tuple;
 		} else {
 			if (input == null) return null;
@@ -270,14 +252,10 @@ public class IndexScanOperator implements Operator {
 
 	@Override
 	public void reset() {
-		if(Main.tpch&&!Main.build)
-			return;
 		try {
 			if(input != null){
 				input.close();
 			}
-			if(f==null)
-				return;
 			input = new BufferedReader(new FileReader(f));
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -331,12 +309,6 @@ public class IndexScanOperator implements Operator {
 	
 	@Override
 	public ColumnInfo[] getSchema() {
-		if(Main.tpch&&!Main.build){
-		ColumnInfo[] colinfo = new ColumnInfo[3]; 
-		for(int i=0;i<3;i++)
-		colinfo[i] = schema[i];
-		return colinfo;
-		}
 		return schema;
 	}
 

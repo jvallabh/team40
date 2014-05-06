@@ -4,10 +4,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.io.Serializable;
 import java.sql.Date;
-import java.util.Comparator;
 import java.util.Locale;
 
-public class Datum implements Comparator<Datum>, Serializable {
+public class Datum implements Serializable {
 	String element;
 	
 	Datum (String element){
@@ -70,17 +69,6 @@ public class Datum implements Comparator<Datum>, Serializable {
 		} else if (!element.equals(other.element))
 			return false;
 		return true;
-	}
-
-	
-	public int compareTo(Datum arg0) {
-		return	element.compareTo(arg0.element);
-
-	}
-
-	@Override
-	public int compare(Datum o1, Datum o2) {
-		return o1.element.compareTo(o2.element);
 	}
 	
 	
