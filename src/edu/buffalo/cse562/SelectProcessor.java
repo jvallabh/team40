@@ -49,14 +49,14 @@ public class SelectProcessor {
 		pselect.getFromItem().accept(fromscan);
 		Operator firstTableOperator = fromscan.source;
 		
+		if(Main.tpch&&!Main.done){
+			firstTableOperator = (Operator) Util.getNewJoin(null, null, conditionsOnSingleTables, whereCondExpressions);
+			Main.done = true;
+			return (Operator)firstTableOperator;	
+		}
 		
 		//Incase of subSelect, we will get final resultant operator like project operator.
 		if(firstTableOperator instanceof IndexScanOperator&&!Main.done){
-			if(Main.tpch){
-				firstTableOperator = (Operator) Util.getNewJoin(firstTableOperator, null, conditionsOnSingleTables, whereCondExpressions);
-				Main.done = true;
-				return (Operator)firstTableOperator;	
-			}
 			((IndexScanOperator)firstTableOperator).conditions = Util.getConditionsOfTable(firstTableOperator.getSchema(), conditionsOnSingleTables);
 			((IndexScanOperator)firstTableOperator).processIndexScan();
 		}		
@@ -71,6 +71,21 @@ public class SelectProcessor {
 		Operator finalJoinedOperator = null;
 		
 		List<Column> groupByColumns = pselect.getGroupByColumnReferences();
+		
+		boolean hasGroupBy = groupByColumns == null?false:true;
+		Operator finalGrpByOperator = null;
+		
+		List<OrderByElement> orderByColumns = pselect.getOrderByElements();
+		boolean hasOrderBy = orderByColumns == null?false:true;
+		Operator finalOrderByOperator = null;
+		
+		Distinct distinct = pselect.getDistinct();
+		boolean hasDistinct = distinct == null?false:true;
+		
+		DistinctOperator distinctOperator = null;
+		
+		SelectionOperator selectOperator = null;
+		ProjectionOperator projectOperator = null;
 		
 		for(SelectItem selectItem:selectItems){
 			Expression expr = ((SelectExpressionItem)selectItem).getExpression();
@@ -90,26 +105,18 @@ public class SelectProcessor {
 			}
 		}
 		
-		boolean hasGroupBy = groupByColumns == null?false:true;
-		Operator finalGrpByOperator = null;
+		if(Main.tpch&&!Main.build){
 		
-		List<OrderByElement> orderByColumns = pselect.getOrderByElements();
-		boolean hasOrderBy = orderByColumns == null?false:true;
-		Operator finalOrderByOperator = null;
+		projectOperator = new ProjectionOperator(firstTableOperator,firstTableOperator.getSchema(),selectItems);
 		
-		Distinct distinct = pselect.getDistinct();
-		boolean hasDistinct = distinct == null?false:true;
+		finalGrpByOperator = Util.getGroupByOperator(projectOperator, groupByColumns);
 		
-		DistinctOperator distinctOperator = null;
+		AggrOperator aggrOperator = new AggrOperator(finalGrpByOperator,finalGrpByOperator.getSchema(),selectItems);
 		
-		SelectionOperator selectOperator = null;
-		ProjectionOperator projectOperator = null;
+		return (Operator)aggrOperator;
+		}
 		
 		if(hasJoin){
-			if(Main.tpch){
-				finalJoinedOperator = (Operator) Util.getNewJoin(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
-				return (Operator)finalJoinedOperator;	
-			}
 			//finalJoinedOperator = (INLJOperator) Util.getJoinedOperatorINLJ(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			finalJoinedOperator = (JoinOperator) Util.getJoinedOperatorHashHybrid(firstTableOperator, joinDetails, conditionsOnSingleTables, whereCondExpressions);
 			selectOperator = new SelectionOperator(finalJoinedOperator, finalJoinedOperator.getSchema(), whereCondExpressions);

@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 
 import jdbm.PrimaryTreeMap;
@@ -71,8 +72,8 @@ public class IndexScanOperator implements Operator {
 					indexFile1 = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"howla");
 				indexFile = indexFile1;
 			}
-			//else if(schema[0].origTableName.equals("nation"))
-			//	indexFile = Main.indexFile;
+			else if(schema[0].origTableName.equals("nation"))
+				indexFile = Main.indexFile;
 			else
 			indexFile = RecordManagerFactory.createRecordManager(Main.indexDir+"/"+"Index"+schema[0].tableName);
 		}
@@ -179,8 +180,8 @@ public class IndexScanOperator implements Operator {
 				tree = indexFile.treeMap("howla");
 			else
 			tree = indexFile.treeMap(this.schema[schemaIndex].tableName+"_"+this.schema[schemaIndex].colDef.getColumnName());
-			iterList = new String[tree.size()];
-			tree.keySet().toArray(iterList);
+			Set<String> set = tree.keySet();
+			iterList = set.toArray(new String[set.size()]);
 			if(indexType == 0){
 				((EqualsTo)condition_).getRightExpression().accept(eval);
 				indexInTree = Arrays.asList(iterList).indexOf(eval.getValue());
@@ -233,6 +234,13 @@ public class IndexScanOperator implements Operator {
 			if(tuple == null) return null;
 			if(evaluateTuple(tuple))
 				break;
+			}
+			if(Main.tpch&&!Main.build){
+				Datum[] modifiedTuple = new Datum[3];
+				for(int i=0;i<3;i++){
+					modifiedTuple[i] = tuple[i];
+				}
+				return modifiedTuple;
 			}
 			return tuple;
 		} else {

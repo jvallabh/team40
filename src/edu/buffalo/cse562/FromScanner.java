@@ -37,6 +37,8 @@ public class FromScanner implements FromItemVisitor {
 
 	@Override
 	public void visit(Table tableName) {
+		if(Main.tpch&&!Main.build)
+			return;
 		//System.out.println("Visit method with tableName is called");
 		CreateTable table = tables.get(tableName.getName().toUpperCase()) == null?tables.get(tableName.getName()):tables.get(tableName.getName().toUpperCase());
 		List<?> colDefs = table.getColumnDefinitions();
